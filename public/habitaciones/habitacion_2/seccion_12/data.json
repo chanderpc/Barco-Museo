@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab2-sec12-img1.jpeg", "hab2-sec12-img2.jpeg", "hab2-sec12-img3.jpeg","hab2-sec12-img4.jpeg","hab2-sec12-img5.jpeg","hab2-sec12-img6.jpeg","hab2-sec12-img7.jpeg","hab2-sec12-img8.jpeg"]
+  },
+  "titulos": ["Montaje planta"],
+  "subtitulos": [
+    ["Instalación de pilotes","Montaje de estructuras metálicas en planta","Preparando la base para la instalación","Ensamblaje de tanque industrial","Montaje de tanque cilíndrico","Instalación de sistema de bombeo","Instalación del sistema eléctrico de control","Sistema de respaldo eléctrico"]
+  ]
+}

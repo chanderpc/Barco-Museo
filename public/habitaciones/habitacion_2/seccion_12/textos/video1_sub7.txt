@@ -1,0 +1,2 @@
+Se muestra el grupo electrógeno instalado para brindar energía de respaldo en caso de fallas en la red eléctrica principal. Este sistema asegura la continuidad operativa de la planta, especialmente en procesos críticos donde el suministro eléctrico ininterrumpido es esencial para evitar interrupciones y daños en los equipos.
+
