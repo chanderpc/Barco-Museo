@@ -1,0 +1,41 @@
+{
+  "grupo1": [
+    { "pregunta": "¿Cuál es el nombre de este crustaceo?", "imagen": "qz1.jpeg", "opciones": ["Langostino verde", "Langosta verde", "Camaron gris"], "correcta": 1 },
+    { "pregunta": "¿Que pez acompaña al barbudo?", "imagen": "qz2.jpeg", "opciones": ["Lisa", "Chita", "Pejerrey"], "correcta": 0 },
+    { "pregunta": "¿En que sala esta este equipo?", "imagen": "qz3.jpeg", "opciones": ["Habitación 1", "Habitación 2", "Habitación 3"], "correcta": 1 },
+    { "pregunta": "¿Como se llama esta especie?", "imagen": "qz13.jpeg", "opciones": ["Delfin común", "Remora", "Marsopa espinosa"], "correcta": 2 },
+    { "pregunta": "¿Segun la caja, cuantos kilos contiene?", "imagen": "qz7.jpeg", "opciones": ["17Kg", "14Kg", "16Kg"], "correcta": 0 }
+ 
+  ],
+  "grupo2": [
+    { "pregunta": "¿Que pez acompaña al barbudo?", "imagen": "qz2.jpeg", "opciones": ["Lisa", "Chita", "Pejerrey"], "correcta": 0 },
+    { "pregunta": "¿Cuál es el nombre de este caracol?", "imagen": "qz6.jpeg", "opciones": ["caracol bola", "caracol repollo", "caracol coco"], "correcta": 2 },
+    { "pregunta": "¿Qué tipo de harina se muestra?", "imagen": "qz8.jpeg", "opciones": ["Standard y Taiwan", "Standard y Thailand", "Prime y Thailand"], "correcta": 1 },
+    { "pregunta": "¿En que sala se encuentra?", "imagen": "qz4.jpeg", "opciones": ["Sala 2", "Sala 4", "Sala 1"], "correcta": 2 },
+    { "pregunta": "¿Como se llama el barco que esta a su lado?", "imagen": "qz10.jpeg", "opciones": ["Vitolo III", "Vitolo I", "Vitolo IV"], "correcta": 1 }
+
+  ],
+   "grupo3": [
+    { "pregunta": "¿Cual es el nombre de este pez?", "imagen": "qz11.jpeg", "opciones": ["Caballa", "Jurel", "Sardina"], "correcta": 1 },
+    { "pregunta": "¿Qué equipo se muestra en la imagen?", "imagen": "qz12.jpeg", "opciones": ["Radio VHF", "Generador VH", "Medidor de PH"], "correcta": 2 },
+    { "pregunta": "¿En que sala se encuentra?", "imagen": "qz9.jpeg", "opciones": ["Sala 3", "Sala 1", "Sala 4"], "correcta": 2 },
+    { "pregunta": "¿Segun la caja, cuantos kilos contiene?", "imagen": "qz7.jpeg", "opciones": ["17Kg", "14Kg", "16Kg"], "correcta": 0 },
+    { "pregunta": "¿En que sala este este pez?", "imagen": "qz5.jpeg", "opciones": ["Sala 4", "Sala 3", "Sala 1"], "correcta": 1 }
+
+  ],
+   "grupo4": [  
+    { "pregunta": "¿Como se llama el barco que esta a su lado?", "imagen": "qz10.jpeg", "opciones": ["Vitolo III", "Vitolo I", "Vitolo IV"], "correcta": 1 },
+    { "pregunta": "¿Cuál es el nombre de este crustaceo?", "imagen": "qz1.jpeg", "opciones": ["Langosta verde", "Langostino verde", "Camaron gris"], "correcta": 0 },
+    { "pregunta": "¿Qué tipo de harina se muestra?", "imagen": "qz8.jpeg", "opciones": ["Standard y Taiwan", "Prime y Thailand", "Standard y Thailand"], "correcta": 2 },
+    { "pregunta": "¿En que sala esta este equipo?", "imagen": "qz3.jpeg", "opciones": ["Sala 1", "Sala 2", "Sala 3"], "correcta": 1 },
+    { "pregunta": "¿Qué equipo se muestra en la imagen?", "imagen": "qz12.jpeg", "opciones": ["Radio VHF", "Generador VH", "Medidor de PH"], "correcta": 2 }
+
+  ],
+   "grupo5": [
+    { "pregunta": "¿Cuál es el nombre de este caracol?", "imagen": "qz6.jpeg", "opciones": ["caracol bola", "caracol repollo", "caracol coco"], "correcta": 2 },
+    { "pregunta": "¿Como se llama esta especie?", "imagen": "qz13.jpeg", "opciones": ["Marsopa espinosa", "Remora", "Delfin común"], "correcta": 0 },
+    { "pregunta": "¿Cuál es el nombre de este crustaceo?", "imagen": "qz1.jpeg", "opciones": ["Langostino verde", "Langosta verde", "Camaron gris"], "correcta": 1 },
+    { "pregunta": "¿Cual es el nombre de este pez?", "imagen": "qz11.jpeg", "opciones": ["Caballa", "Jurel", "Sardina"], "correcta": 1 },
+    { "pregunta": "¿En que sala se encuentra?", "imagen": "qz9.jpeg", "opciones": ["Sala 3", "Sala 1", "Sala 4"], "correcta": 2 }
+  ]  
+}
