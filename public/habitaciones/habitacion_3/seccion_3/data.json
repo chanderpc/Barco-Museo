@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab3-sec3-img1.jpeg", "hab3-sec3-img2.jpeg", "hab3-sec3-img3.jpeg"]
+  },
+  "titulos": ["Industria y comercialización pesquera"],
+  "subtitulos": [
+    ["Desembarques", "Distribucion de desembarques","Productos METALPREN"]
+  ]
+}
