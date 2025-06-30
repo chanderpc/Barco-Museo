@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab4-sec14-img1.jpeg", "hab4-sec14-img2.jpeg"]
+  },
+  "titulos": ["Peces de fondo y estuario"],
+  "subtitulos": [
+    ["Lisa (Mugil cephalus)", "Barbudo (Polydactylus approximans)"]
+  ]
+}
