@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["Hab1-sec16-img1.jpeg", "Hab1-sec16-img2.jpeg", "Hab1-sec16-img3.jpeg"]
+  },
+  "titulos": ["Tesoros del Antiguo Perú"],
+  "subtitulos": [
+    ["Huacos", "Huacos", "Huacos"]
+  ]
+}
