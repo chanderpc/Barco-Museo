@@ -1,0 +1,10 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab2-sec14-img1.jpeg", "hab2-sec14-img2.jpeg", "hab2-sec14-img3.jpeg", "hab2-sec14-img4.jpeg", "hab2-sec14-img5.jpeg"]
+  },
+  "titulos": ["Industria Pesquera del Perú: Impacto y Proceso"],
+  "subtitulos": [
+    ["Pesca de Anchoveta: Control y Sostenibilidad","Compromiso Ambiental del Sector Pesquero", "Distribución regional de desembarques de anchoveta", "Pesquería peruana en números","Diagrama de procesos de TASA Chimbote"]
+  ]
+}
+
