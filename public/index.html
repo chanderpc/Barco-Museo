@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Texto general redondeado -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700&family=Fredoka:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <title>Guia virtual - Barco Museo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <audio id="audio-animacion" src="sounds/zoom.mp3" preload="auto"></audio>
+    <div id="pantalla-transicion"></div>
+    <div id="fixed-header">
+      APROFERROL S.A.
+      <button id="btn-configuracion" title="Configuración">⚙️</button>
+    </div>
+
+    <div id="fixed-footer">
+      Nissi industrial © ⚓
+      <button id="toggle-navegacion" title="Mostrar menú" disabled>☰</button>
+    </div>
+
+  <!-- Pantalla de bienvenida -->
+    <div id="welcome-screen">
+
+      <!-- Logo debajo del encabezado -->
+      <img id="welcome-logo" src="logo.jpg" oncontextmenu="return false;" alt="Logo del museo">
+      <div id="avatar-selector">
+        <h3>Selecciona tu guía</h3>
+        <div id="avatar-options"></div>
+      </div>
+
+      <div id="google-login-container" style="margin-top: 30px;">
+        <div id="google-login"></div>
+      </div>
+      <div id="user-info" style="margin-top: 10px; font-weight: bold; color: white;"></div>
+      
+      <button id="start-button">Comenzar</button>
+      <div id="welcome-text">
+        BARCO - MUSEO
+      </div>
+
+      <!-- Íconos de redes sociales -->
+      <div id="redes-sociales">
+        <a href="https://www.facebook.com/aproferrol/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://www.instagram.com/aproferrol/" target="_blank"><i class="fab fa-instagram"></i></a>
+        <a href="https://aproferrol.com/" target="_blank"><i class="fa-solid fa-earth-americas"></i></a>
+        <a href=https://pe.linkedin.com/company/aproferrol target="_blank"><i class="fa-brands fa-linkedin"></i></a>
+      </div>
+  </div>
+
+  <!-- Interfaz principal -->
+  <div id="app" class="hidden">
+    <div class="background-overlay"></div>
+
+    <div id="avatar-row">
+      <div id="avatar-container">
+        <video playsinline webkit-playsinline preload="auto" autoplay id="aiko-video"></video>
+        <img id="avatar" alt="Avatar guía">
+        <div id="avatar-loader" class="loader-overlay hidden">
+          <div class="loader-spinner"></div>
+        </div>
+      </div>
+
+      <div id="boton-imagen-container">
+        <button class="btn-imagen" onclick="mostrarImagenSuperpuesta()">
+          <div class="mini-mapa-puntos">
+            <div class="punto-mapa" data-habitacion="habitacion_1" style="top: 70%; left: 65%;"></div>
+            <div class="punto-mapa" data-habitacion="habitacion_2" style="top: 40%; left: 65%;"></div>
+            <div class="punto-mapa" data-habitacion="habitacion_3" style="top: 40%; left: 35%;"></div>
+            <div class="punto-mapa" data-habitacion="habitacion_4" style="top: 70%; left: 35%;"></div>
+            <div class="punto-mapa" data-habitacion="habitacion_5" style="top: 55%; left: 50%;"></div>
+            <div class="punto-mapa" data-habitacion="habitacion_6" style="top: 18%; left: 50%;"></div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+      <!-- Imagen superpuesta oculta -->
+      <div id="imagen-superpuesta" class="hidden">
+      <div id="mapa-contenedor">
+        <img src="mapa.webp" oncontextmenu="return false;" alt="Mapa del museo" id="mapa-img">
+        <!-- En index.html (mapa) -->
+        <button class="mapa-btn" style="top: 70%; left: 65%;" onclick="registrarBoton('habitacion_1');irAHabitacion('habitacion_1', 'seccion_1')">1</button> <!--📍-->
+        <button class="mapa-btn" style="top: 38%; left: 68%;" onclick="registrarBoton('habitacion_2');irAHabitacion('habitacion_2', 'seccion_1')">2</button>
+        <button class="mapa-btn" style="top: 38%; left: 33%;" onclick="registrarBoton('habitacion_3');irAHabitacion('habitacion_3', 'seccion_1')">3</button>
+        <button class="mapa-btn" style="top: 70%; left: 35%;" onclick="registrarBoton('habitacion_4');irAHabitacion('habitacion_4', 'seccion_1')">4</button>
+        <button class="mapa-btn" style="top: 55%; left: 50%;" onclick="registrarBoton('habitacion_5');irAHabitacion('habitacion_5', 'seccion_1')">5</button>
+        <button class="mapa-btn" style="top: 18%; left: 50%;" onclick="registrarBoton('habitacion_6');irAHabitacion('habitacion_6', 'seccion_1')">6</button>
+      </div>
+      <div class="botones-mapa">
+        <button id="btn-retroceder-superpuesta" onclick="cerrarImagenSuperpuesta()">⬅️ Regresar</button>
+        <button id="btn-iniciar-juego" onclick="iniciarJuego()">🎮 QUIZ</button>
+      </div>
+    </div>
+
+      <!-- Diálogo -->
+      <div class="dialogue-wrapper">
+        <div id="dialogue-box"></div>
+      </div>
+
+      <!-- galeria ==========-->
+      <div id="galeria-slider"></div>
+
+        <!-- Botones numerados -->
+    <div class="galeria-wrapper">
+      <button class="flecha-izquierda" id="flecha-prev" onclick="moverBloque(-1)">❮</button>   
+
+      <div id="galeria-controles"></div>    
+
+      <button class="flecha-derecha" id="flecha-next" onclick="moverBloque(1)">❯</button>
+    </div>
+
+        
+        <!-- al final de #app -->
+
+  </div>
+  
+       <!-- Pantalla del juego -->
+  <div id="pantalla-juego" class="hidden">
+    <div id="introduccion-juego" class="hidden">
+      <div class="intro-card">
+        <h2>🧠 Bienvenido al QUIZ del Museo</h2>
+        <p>
+          En este juego interactivo, deberás observar con atención distintas imágenes de las exposiciones del museo.  
+          <br><br>
+          Tu misión es elegir la respuesta correcta en cada pregunta. ¡Pon a prueba tus conocimientos y diviértete!
+        </p>
+        <button id="btn-iniciar-real-juego" onclick="registrarBoton('Iniciar_Juego');iniciarJuegoReal()">✅ Comenzar juego</button>
+      </div>
+      <button id="btn-salir-juego" onclick="cerrarJuegoYVolverImagen()">⬅️ Volver al mapa</button>
+    </div>
+
+    <div id="juego-container">
+      <div style="height: 70px;"></div>
+      <img id="juego-imagen" src="" alt="Imagen pregunta">
+      <div id="pregunta-wrapper">
+        <h2 id="juego-pregunta"></h2>
+      </div>
+      <div id="fondo-opciones">
+        <div id="juego-opciones"></div>
+      </div>
+      <p id="juego-feedback"></p>
+       <!-- Contenedor para los botones de navegación -->
+        
+      <div id="pantalla-final" class="hidden">
+        <h2 id="mensaje-final">🎉 ¡Felicidades! 🎉</h2>
+        <p id="mensaje-extra">Terminaste el QUIZ ✅</p>
+        <p id="mensaje-extra1"></p>
+        <p id="mensaje-extra2">¿Quieres seguir jugando o volver al mapa?</p>      
+
+        <div class="botones-final">
+          <button id="btn-retroceder-final" onclick="cerrarJuegoYVolverImagen()">⬅️ Mapa</button>
+          <button id="btn-siguiente-quiz" onclick="registrarBoton('Seguir_juego');cambiarGrupo()">➡️ QUIZ</button>
+        </div>
+      </div>
+
+
+      <div id="quiz-navegacion">
+        <button id="btn-retroceder" class="retroceder" onclick="cerrarJuegoYVolverImagen()">⬅️ Mapa</button> 
+      </div>
+      <div style="height: 50px;"></div>
+    </div>
+  </div>
+   <!-- Juego  FIN -->
+    <!-- Sonidos -->
+    <audio id="click-sound" src="click.mp3" preload="auto"></audio>
+
+  <div id="habitacion-loader" class="hidden">
+    <div class="loader-spinner"></div>
+  </div>
+  <script>
+  document.addEventListener("contextmenu", function (e) {
+    // Bloquear clic derecho solo en imágenes dentro del quiz
+    if (e.target.closest("#juego-container") && e.target.tagName === "IMG") {
+      e.preventDefault();
+    }
+  });
+</script>
+  <nav id="barra-navegacion">
+    <button id="btn-cambiar-guia">
+      <i class="fas fa-user" style="color: #2196f3; font-size: 22px;"></i> <!-- Azul guía -->
+    </button>
+    <button id="btn-volver-principal">
+      <i class="fas fa-home" style="color: #4caf50; font-size: 22px;"></i> <!-- Verde inicio -->
+    </button>
+    <button id="btn-ir-quiz">
+      <i class="fas fa-gamepad" style="color: #f44336; font-size: 22px;"></i> <!-- Rojo quiz -->
+    </button>
+  </nav>
+  <div id="config-panel">
+    <button id="btn-toggle-tema" title="Cambiar tema">🌙</button>
+    <button id="btn-toggle-sonido" title="Silenciar">🔊</button>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
