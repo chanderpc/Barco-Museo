@@ -1,0 +1,1 @@
+Esta caja muestra la imagen de el pez 'Bonito', indicando que contiene 17 kilos de este tipo de pescado. Se trata de un embalaje típico para la comercialización y transporte de bonito fresco o congelado.

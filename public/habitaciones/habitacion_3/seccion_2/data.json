@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab3-sec2-img1.jpeg", "hab3-sec2-img2.jpeg", "hab3-sec2-img3.jpeg", "hab3-sec2-img4.jpeg", "hab3-sec2-img5.jpeg", "hab3-sec2-img6.jpeg", "hab3-sec2-img7.jpeg"]
+  },
+  "titulos": ["Productos y procesos de la industria pesquera"],
+  "subtitulos": [
+    ["Tipo 1/4 CLUB y tipo TALL", "1/2 LIBRA TUNA y tipo OVAL","Productos marinos", "Mahi-Mahi","Kontiki", "Pez Bonito", "El Proceso del congelado pesquero"]
+  ]
+}
