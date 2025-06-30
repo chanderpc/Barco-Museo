@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab3-sec8-img1.jpeg", "hab3-sec8-img2.jpeg", "hab3-sec8-img3.jpeg", "hab3-sec8-img4.jpeg"]
+  },
+  "titulos": ["Principales especies para conserva"],
+  "subtitulos": [
+    ["Jurel", "Caballa","sardina", "Bonito"]
+  ]
+}
