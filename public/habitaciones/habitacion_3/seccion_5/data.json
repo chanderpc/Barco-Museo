@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab3-sec5-img1.jpeg", "hab3-sec5-img2.jpeg"]
+  },
+  "titulos": ["Patescas de madera"],
+  "subtitulos": [
+    ["patesca de madera doble", "patesca de madera simple"]
+  ]
+}
