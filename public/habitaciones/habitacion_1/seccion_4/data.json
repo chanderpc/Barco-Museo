@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["Hab1-sec4-img1.jpeg", "Hab1-sec4-img2.jpeg", "Hab1-sec4-img3.jpeg","Hab1-sec4-img4.jpeg","Hab1-sec4-img5.jpeg", "Hab1-sec4-img6.jpeg"]
+  },
+  "titulos": ["Accesorios de Captura"],
+  "subtitulos": [
+    ["Señuelos", "Anzuelo playa", "Pesas plomo", "Anzuelo altura","Señuelos pota", "Armado anzuelos"]
+  ]
+}
