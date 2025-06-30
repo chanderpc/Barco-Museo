@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab4-sec16-img1.jpeg", "hab4-sec16-img2.jpeg", "hab4-sec16-img3.jpeg", "hab4-sec16-img4.jpeg", "hab4-sec16-img5.jpeg"]
+  },
+  "titulos": ["Peces del fondo rocoso"],
+  "subtitulos": [
+    ["Cabrilla","Chita", "Pintadilla", "Trambollo", "Cabinza"]
+  ]
+}
