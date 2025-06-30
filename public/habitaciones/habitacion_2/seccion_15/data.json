@@ -1,0 +1,10 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab2-sec15-img1.jpeg", "hab2-sec15-img2.jpeg", "hab2-sec15-img3.jpeg"]
+  },
+  "titulos": ["Variedades de Harina de Pescado"],
+  "subtitulos": [
+    ["Super Prime", "Prime", "Standard"]
+  ]
+}
+
