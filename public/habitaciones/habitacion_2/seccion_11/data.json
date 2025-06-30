@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab2-sec11-img1.jpeg", "hab2-sec11-img2.jpeg", "hab2-sec11-img3.jpeg","hab2-sec11-img4.jpeg","hab2-sec11-img5.jpeg","hab2-sec11-img6.jpeg","hab2-sec11-img7.jpeg","hab2-sec11-img8.jpeg"]
+  },
+  "titulos": ["Emisarios Submarinos"],
+  "subtitulos": [
+    ["Unión entre tierra y mar","Instalación en el mar","Instalación de Long Line","Tendido de Tuberías Submarinas","Preparación de Emisarios Submarinos","Ensamblaje de Tuberías en Tierra","Soldadura de Tuberías","Tanques y sistema de bombeo"]
+  ]
+}
