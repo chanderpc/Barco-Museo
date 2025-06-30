@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["Hab1-sec13-img1.jpeg", "Hab1-sec13-img2.jpeg", "Hab1-sec13-img3.jpeg", "Hab1-sec13-img4.jpeg"]
+  },
+  "titulos": ["Herramientas y Fauna del Mar"],
+  "subtitulos": [
+    ["Patesca de madera simple", "Patesca de madera doble" ,"El guanay" ,"Pingüino de Humboldt" ]
+  ]
+}
