@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab2-sec7-img1.jpeg", "Hab2-sec7-img2.jpeg"]
+  },
+  "titulos": ["Equipos de Comunicación y Control"],
+  "subtitulos": [
+    ["Radio VHF Marina", "Amperímetro Analógico"]
+  ]
+}
