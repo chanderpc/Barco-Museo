@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["Hab1-sec12-img1.jpeg", "Hab1-sec12-img2.jpeg", "Hab1-sec12-img3.jpeg", "Hab1-sec12-img4.jpeg"]
+  },
+  "titulos": ["Instrumentos Tradicionales de la Pesca Artesanal"],
+  "subtitulos": [
+    ["Mochila de pescador", "El caballito de totora", "La trampa de anguila ", "Atarraya" ]
+  ]
+}
