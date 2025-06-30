@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["Hab5-sec2-img1.jpeg", "Hab5-sec2-img2.jpeg", "Hab5-sec2-img3.jpeg", "Hab5-sec2-img4.jpeg","Hab5-sec2-img5.jpeg"]
+  },
+  "titulos": ["Pasillo medio"],
+  "subtitulos": [
+    []
+  ]
+}
