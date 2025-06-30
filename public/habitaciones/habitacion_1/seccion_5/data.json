@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["Hab1-sec5-img1.jpeg", "Hab1-sec5-img2.jpeg", "Hab1-sec5-img3.jpeg","Hab1-sec5-img4.jpeg", "Hab1-sec5-img5.jpeg"]
+  },
+  "titulos": ["Caracoles y moluscos"],
+  "subtitulos": [
+    ["El caracol repollo", "El caracol coco", "El caracol bola", "El caracol rosado", "El labio señorita"]
+  ]
+}
