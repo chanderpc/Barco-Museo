@@ -1,0 +1,10 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab2-sec18-img1.jpeg","hab2-sec18-img2.jpeg", "hab2-sec18-img3.jpeg"]
+  },
+  "titulos": ["Productos Derivados de la Pesca Industrial"],
+  "subtitulos": [
+    ["Tipos de Aceite de Pescado","Harina de Pescado de Alta Calidad","Subproductos del Proceso Pesquero"]
+  ]
+}
+
