@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab3-sec9-img1.jpeg", "hab3-sec9-img2.jpeg"]
+  },
+  "titulos": ["Conservas abiertas"],
+  "subtitulos": [
+    ["Presentación del producto final al consumidor", "Elementos clave en la fabricación de conservas"]
+  ]
+}
