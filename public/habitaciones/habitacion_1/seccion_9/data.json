@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["Hab1-sec9-img1.jpeg", "Hab1-sec9-img2.jpeg", "Hab1-sec9-img3.jpeg","Hab1-sec9-img4.jpeg", "Hab1-sec9-img5.jpeg"]
+  },
+  "titulos": ["Cangrejos"],
+  "subtitulos": [
+    ["EL cangrejo peludo", "El cangrejo camote", "La jaiba", "El cangrejo violáceo", "El cangrejo cockeri"]
+  ]
+}
