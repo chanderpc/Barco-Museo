@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["Hab1-sec1-img1.jpeg", "Hab1-sec1-img2.jpeg", "Hab1-sec1-img3.jpeg","Hab1-sec1-img4.jpeg","Hab1-sec1-img5.jpeg"]
+  },
+  "titulos": ["Elementos de navegación y maniobra"],
+  "subtitulos": [
+    ["Hélice","Foco rojo", "Pasteca","Foco verde","Ganchos" ]
+  ]
+}
