@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab3-sec1-img1.jpeg", "hab3-sec1-img2.jpeg"]
+  },
+  "titulos": ["Barcos pesqueros"],
+  "subtitulos": [
+    ["VITOLO I", "VITOLO II"]
+  ]
+}
