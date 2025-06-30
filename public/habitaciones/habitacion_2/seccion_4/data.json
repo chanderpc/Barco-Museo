@@ -1,0 +1,10 @@
+{
+  "imagenesPorCaja": {
+    "0": ["hab2-sec4-img1.jpeg", "hab2-sec4-img2.jpeg"]
+  },
+  "titulos": ["Sistema de Tratamiento de Efluentes"],
+  "subtitulos": [
+    ["Estación de Bombeo", "Emisario Submarino"]
+  ] 
+}
+
