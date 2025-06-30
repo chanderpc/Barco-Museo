@@ -1,0 +1,9 @@
+{
+  "imagenesPorCaja": {
+    "0": ["Hab1-sec2-img1.jpeg", "Hab1-sec2-img2.jpeg", "Hab1-sec2-img3.jpeg", "Hab1-sec2-img4.jpeg", "Hab1-sec2-img5.jpeg"]
+  },
+  "titulos": ["Herramientas y Aparejos de Pesca"],
+  "subtitulos": [
+    ["Agujas de reparación", "Espinel", "Ganchos", "Aparejos", "Ganchos reparación"]
+  ]
+}
