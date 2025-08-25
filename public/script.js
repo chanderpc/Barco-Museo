@@ -280,6 +280,8 @@ document.addEventListener("DOMContentLoaded", () => {
     registrarBoton(avatares[avatarSeleccionado].nombre);
     document.getElementById("toggle-navegacion").disabled = false;
 
+    let ID = avatares[avatarSeleccionado]?.vozID || avatarID;
+    changeGuide(ID);
     await cargarSeccionMinima();
     irAHabitacion('habitacion_1');
     welcomeScreen.classList.remove("blur-out");
@@ -316,7 +318,6 @@ video.load();
     if (dialogueBox && datos.saludo) {
       escribirTextoGradualmente(datos.saludo, dialogueBox, 60);
     }
-
 
         aplicarAnimacionesEntrada();
       }, 800);
@@ -536,6 +537,7 @@ async function irAHabitacion(habitacionID, seccionID) {
     const accion = btn.getAttribute('onclick');
     btn.classList.toggle('activo', accion && accion.includes(habitacionID));
   });
+  navigateToRoom(habitacionID);
 }
 
 /* cambiar entre habitaciones ===========================*/
@@ -604,6 +606,8 @@ async function cambiarSeccion(seccionID) {
         
         await esperar(300);
         ocultarLoaderHabitacion(); // Por si falla
+
+        navigateToSection(habitacionActual, seccionID);
 }
 
 function inicializarImagenes() {
@@ -685,7 +689,6 @@ function reproducirAudio(button) {
   const step = parseInt(contenedor.dataset.step);
   const audioName = `video${index + 1}${step > 0 ? `_sub${step}` : ''}`;
   const videoURL = `${ruta}/videos/${vozID}/${audioName}.mp4`;
-
   const loader = document.getElementById("avatar-loader");
   avatar.classList.remove("hidden");
   video.classList.remove("playing");
@@ -1395,5 +1398,3 @@ btnSonido.addEventListener("click", () => {
   // También puedes pausar el fondo si se desea
   if (silenciado && !sonidoFondo.paused) sonidoFondo.pause();
 });
-
-
