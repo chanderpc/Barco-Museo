@@ -25,9 +25,12 @@ class VideoPreloader {
             habitacion_1: {
                 sections: ['seccion_1', 'seccion_2', 'seccion_3'],
                 videosPerSection: {
-                    seccion_1: ['video1.mp4', 'video2.mp4'], // Videos comunes por sección
-                    seccion_2: ['video1.mp4'],
-                    seccion_3: ['video1.mp4']
+                    seccion_1: ['video1.mp4', 'video1_sub1.mp4', 'video1_sub2.mp4', 'video1_sub3.mp4', 'video1_sub4.mp4'], // Videos comunes por sección
+                    seccion_2: ['video1.mp4', 'video1_sub1.mp4', 'video1_sub2.mp4', 'video1_sub3.mp4', 'video1_sub4.mp4'],
+                    seccion_3: ['video1.mp4'],
+                    seccion_4: ['video1.mp4', 'video1_sub1.mp4', 'video1_sub2.mp4', 'video1_sub3.mp4', 'video1_sub4.mp4', 'video1_sub5.mp4'],
+                    seccion_5: ['video1.mp4', 'video1_sub1.mp4', 'video1_sub2.mp4', 'video1_sub3.mp4', 'video1_sub4.mp4'],
+                    seccion_6: ['video1.mp4']
                 }
             },
             habitacion_2: {
