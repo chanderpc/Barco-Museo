@@ -94,7 +94,7 @@ body {
 .audio-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: left;
   font-size: 30px;        /* 🔹 tamaño del icono más chico */
   border: 0.2px solid white; /* 🔹 borde blanco */
   background: #333;
@@ -750,7 +750,69 @@ body {
   background-color: #e73370;
 }
 
-/* ===== PANTALLA DE JUEGO =====------ */
+/* ===== PANTALLA DE INICIO DEL JUEGO =====------ */
+#introduccion-juego {
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.intro-card {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 90%;
+  color: #333;
+}
+
+.intro-card h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.intro-card p {
+  font-size: 18px;
+  line-height: 1.6;
+  color: #555;
+}
+.intro-card {
+  animation: fadeInScale 0.4s ease;
+}
+
+@keyframes fadeInScale {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+#btn-iniciar-real-juego {
+  padding: 12px 24px;
+  font-size: 18px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#btn-iniciar-real-juego:hover {
+  background-color: #2563eb;
+}
+#btn-salir-juego {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+/*==========================================================================*/
 #pantalla-juego {
   position: absolute;
   overflow-y: auto;
@@ -869,9 +931,7 @@ body {
 
 /* ===== BOTONES DE JUEGO ===== */
 #btn-salir-juego,
-#btn-retroceder,
-#btn-siguiente-quiz,
-#btn-retroceder2 {
+#btn-retroceder {
   position: relative;
   padding: 10px 20px;
   font-size: 16px;
@@ -885,12 +945,6 @@ body {
   transition: background 0.2s ease;
 }
 
-#btn-salir-juego {
-  bottom: -40px;
-  width: 120px;
-  left: 10px;
-}
-
 #btn-retroceder {
   bottom: 45px;
   width: 120px;
@@ -898,54 +952,68 @@ body {
   float: left;
 }
 
-#btn-siguiente-quiz {
-  bottom: 4px;
-  transform: translateX(90%);
-  float: right;
-}
-
-#btn-retroceder2 {
-  bottom: 45px;
-  width: 120px;
-  transform: translateX(-80%);
-}
-
 /* ===== PANTALLA FINAL ===== */
 #pantalla-final {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: url("fondo/final.jpeg") no-repeat center center;
-  background-size: cover;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  z-index: 999;
-  color: white;
+  justify-content: center;
+  padding: 40px 20px;
   text-align: center;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  margin: 30px auto;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  animation: fadeInUp 0.5s ease;
 }
 
 #pantalla-final h2 {
-  color: #2afc17;
-  font-size: 30px;
-  margin-bottom: 100px;
+  font-size: 28px;
+  color: #22c55e;
+  margin-bottom: 10px;
 }
 
-#mensaje-extra {
-  font-size: 25px;
-  color: #eeff00;
-  margin-bottom: 60px;
+#pantalla-final p {
+  font-size: 18px;
+  color: #444;
+  margin: 10px 0;
+  line-height: 1.5;
 }
 
-#mensaje-extra2 {
-  font-size: 30px;
-  color: #eeff00;
-  margin-bottom: 60px;
+.botones-final {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
+
+.botones-final button {
+  padding: 12px 24px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+#btn-retroceder-final {
+  background-color: #ff4081;
+  color: #ffffff;
+}
+#btn-retroceder-final:hover {
+  background-color: #d1d5db;
+}
+
+#btn-siguiente-quiz {
+  background-color: #3b82f6;
+  color: white;
+}
+#btn-siguiente-quiz:hover {
+  background-color: #2563eb;
+}
+
 
 /* ===== PANTALLAS DE TRANSICIÓN ===== */
 #pantalla-transicion {
