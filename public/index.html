@@ -14,6 +14,23 @@
 <body>
     <audio id="audio-animacion" src="sounds/zoom.mp3" preload="auto"></audio>
     <div id="pantalla-transicion"></div>
+       <div class="audio-container">
+       <!-- Botón con dos iconos -->
+      <button id="btn-audio" class="audio-btn">
+        <span id="icon-audio-on">🔊</span>
+        <span id="icon-audio-off" class="hidden">🔇</span>
+      </button>
+
+      <!-- Panel de audio -->
+      <div id="audio-player" class="audio-player hidden">
+        <div class="audio-label">Audio de bienvenida</div>
+        <input type="range" id="audio-progress" value="0" min="0" step="1">
+      </div>
+
+      <!-- Audio -->
+      <audio id="audio" src="Bnv-Museo-Inicio.wav"></audio>
+    </div>
+
     <div id="fixed-header">
       APROFERROL S.A.
       <button id="btn-configuracion" title="Configuración">⚙️</button>
