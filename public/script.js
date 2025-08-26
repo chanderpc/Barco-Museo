@@ -171,7 +171,7 @@ function inicializarSelectorAvatares() {
 
     div.onclick = () => {
       avatarSeleccionado = id;    
-
+      optimizedPreloader.changeGuide(id);
       // Desmarcar anteriores y marcar este
       document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove("selected"));
       div.classList.add("selected");    
@@ -280,8 +280,6 @@ document.addEventListener("DOMContentLoaded", () => {
     registrarBoton(avatares[avatarSeleccionado].nombre);
     document.getElementById("toggle-navegacion").disabled = false;
 
-    let ID = avatares[avatarSeleccionado]?.vozID || avatarID;
-    changeGuide(ID);
     await cargarSeccionMinima();
     irAHabitacion('habitacion_1');
     welcomeScreen.classList.remove("blur-out");
@@ -498,7 +496,7 @@ function mostrarImagen(index) {
 /* llama a cambiar habitacion */
 async function irAHabitacion(habitacionID, seccionID) {
   mostrarLoaderHabitacion();
-
+  optimizedPreloader.preloadRoom(habitacionID);
   bloqueActual = 0;
   const galeriaSlider = document.getElementById("galeria-slider");
   galeriaSlider.classList.remove("hidden");
@@ -600,7 +598,7 @@ async function cambiarSeccion(seccionID) {
 
       if (!isWelcomePlaying && yaComenzo && botonAudio) {
         reproducirAudio(botonAudio); // Reproducir sin esperar a la imagen
-      }
+      } 
 
       })
         
@@ -669,7 +667,7 @@ function playClickSound() {
   }
 }
 
-function reproducirAudio(button) {
+async function reproducirAudio(button) {
   if (button.classList.contains("btn-audio")) {
     button.disabled = true;
     button.classList.add("disabled-temporal");
@@ -679,64 +677,59 @@ function reproducirAudio(button) {
     }, 3000);
   }
 
-  const ruta = getRutaBase();
   playClickSound();
 
-  const avatarID = avatarSeleccionado.toLowerCase();
-  const vozID = avatares[avatarSeleccionado]?.vozID || avatarID;
   const contenedor = button.closest('.imagen-caja');
   const index = parseInt(contenedor.dataset.index);
   const step = parseInt(contenedor.dataset.step);
-  const audioName = `video${index + 1}${step > 0 ? `_sub${step}` : ''}`;
-  const videoURL = `${ruta}/videos/${vozID}/${audioName}.mp4`;
+  const audioName = `video${index + 1}${step > 0 ? `_sub${step}` : ''}.mp4`;
+
   const loader = document.getElementById("avatar-loader");
+  const avatar = document.getElementById("avatar");
+  const video = document.getElementById("aiko-video");
+
   avatar.classList.remove("hidden");
   video.classList.remove("playing");
   loader.classList.remove("hidden");
 
-  // Verificar si el archivo de video existe antes de asignarlo
-  fetch(videoURL, { method: "HEAD" })
-    .then(res => {
-      if (res.ok) {
-        // El video existe
-        video.src = videoURL;
-        video.load();
-        video.currentTime = 0;
+  try {
+    // 🎬 Usar el sistema optimizado
+    const preloadedVideo = await optimizedPreloader.getVideo(
+      habitacionActual, 
+      seccionActual, 
+      audioName
+    );
 
-        video.oncanplay = () => {
-          loader.classList.add("hidden");
-          avatar.classList.add("hidden");
-          video.classList.add("playing");
-          video.play().catch(() => {
-            avatar.classList.remove("hidden");
-            video.classList.remove("playing");
-          });
-        };
+    if (preloadedVideo) {
+      video.src = preloadedVideo.src;
+      video.currentTime = 0;
 
-        video.onerror = () => {
-          loader.classList.add("hidden");
+      video.oncanplay = () => {
+        loader.classList.add("hidden");
+        avatar.classList.add("hidden");
+        video.classList.add("playing");
+        video.play().catch(() => {
           avatar.classList.remove("hidden");
           video.classList.remove("playing");
-        };
-
-      } else {
-        // Video no existe, mostrar avatar
-        loader.classList.add("hidden");
-        avatar.classList.remove("hidden");
-        video.classList.remove("playing");
-        video.src = ""; // Limpia el video
-      }
-    })
-    .catch(() => {
-      // Error al verificar existencia del archivo
+        });
+      };
+    } else {
+      // Sin video disponible
       loader.classList.add("hidden");
       avatar.classList.remove("hidden");
       video.classList.remove("playing");
-      video.src = ""; // Limpia el video
-    });
+    }
 
-  // Subtítulos
-  fetch(`${ruta}/textos/${audioName}.txt`)
+  } catch (error) {
+    console.error("Error reproduciendo video:", error);
+    loader.classList.add("hidden");
+    avatar.classList.remove("hidden");
+    video.classList.remove("playing");
+  }
+
+  // Subtítulos (mantener igual)
+  const ruta = getRutaBase();
+  fetch(`${ruta}/textos/${audioName.replace('.mp4', '.txt')}`)
     .then(res => res.ok ? res.text() : "")
     .then(texto => {
       const dialogueBox = document.getElementById("dialogue-box");
@@ -1398,3 +1391,4 @@ btnSonido.addEventListener("click", () => {
   // También puedes pausar el fondo si se desea
   if (silenciado && !sonidoFondo.paused) sonidoFondo.pause();
 });
+
