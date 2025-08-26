@@ -286,6 +286,10 @@ document.addEventListener("DOMContentLoaded", () => {
     registrarBoton(avatares[avatarSeleccionado].nombre);
     document.getElementById("toggle-navegacion").disabled = false;
 
+    btnAudio.classList.add("hidden");
+    audio.pause()
+    audioPlayer.classList.add("hidden");
+
     await cargarSeccionMinima();
     irAHabitacion('habitacion_1');
     welcomeScreen.classList.remove("blur-out");
@@ -1270,6 +1274,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cerrarImagenSuperpuesta?.();
     cerrarJuegoYVolverImagen?.();
     detenerGuia?.();
+    btnAudio.classList.remove("hidden");
   });
 
   btnPrincipal?.addEventListener("click", () => {
@@ -1347,3 +1352,33 @@ btnSonido.addEventListener("click", () => {
   if (silenciado && !sonidoFondo.paused) sonidoFondo.pause();
 });
 
+const btnAudio = document.getElementById("btn-audio");
+const audioPlayer = document.getElementById("audio-player");
+const audio = document.getElementById("audio");
+const progress = document.getElementById("audio-progress");
+
+const iconOn = document.getElementById("icon-audio-on");
+const iconOff = document.getElementById("icon-audio-off");
+
+btnAudio.addEventListener("click", () => {
+  const isHidden = audioPlayer.classList.toggle("hidden");
+
+  if (!isHidden) {
+    audio.play();
+    iconOn.classList.remove("hidden");
+    iconOff.classList.add("hidden");
+  } else {
+    audio.pause();
+    iconOn.classList.add("hidden");
+    iconOff.classList.remove("hidden");
+  }
+});
+
+audio.addEventListener("timeupdate", () => {
+  progress.max = audio.duration;
+  progress.value = audio.currentTime;
+});
+
+progress.addEventListener("input", () => {
+  audio.currentTime = progress.value;
+});
