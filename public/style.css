@@ -145,6 +145,40 @@ body {
   display: none;
 }
 /*fIN AUDIO BIENV==============================*/
+/*==============PANTALLA COMPLETA BOTONES=======================*/
+.fullscreen-controls {
+  position: fixed;
+  top: 7px;    
+  left: 8px;   
+  z-index: 10002;
+}
+
+.fullscreen-controls button {
+  width: 28px;              /* 🔹 más pequeño */
+  height: 28px;             /* 🔹 más pequeño */
+  border: 1px solid white;  
+  border-radius: 50%;       /* 🔹 forma circular */
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 14px;          /* 🔹 ícono más chico */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.fullscreen-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.hidden {
+  display: none;
+}
+
 /* ===== PANTALLA DE BIENVENIDA ===== */
 #welcome-screen {
   position: relative;
@@ -812,7 +846,17 @@ body {
   font-size: 16px;
   cursor: pointer;
 }
-/*==========================================================================*/
+#imagen-final-resultado {
+  position: absolute;
+  top: -185px;           /* 🔼 sobresale hacia arriba */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;         /* o el tamaño que quieras */
+  height: 100px;
+  object-fit: contain;
+  z-index: 10;
+}
+/*============================== FIN PANTALLA DE INICIO DEL JUEGO============================================*/
 #pantalla-juego {
   position: absolute;
   overflow-y: auto;
