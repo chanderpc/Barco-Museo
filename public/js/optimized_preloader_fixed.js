@@ -41,7 +41,7 @@ class OptimizedVideoPreloader {
 
         // Mapeo de avatares a carpetas de videos
         this.guideMapping = {
-            'Andrea': 'andrea',
+            'Andrea': 'andrea_irl',
             'Andrea_anime': 'andrea',
             'Carlos_IRL': 'carlos_irl',
             'Carlos': 'carlos',
@@ -380,6 +380,37 @@ async function reproducirAudioOptimizado(button) {
     const step = parseInt(contenedor.dataset.step);
     const audioName = `video${index + 1}${step > 0 ? `_sub${step}` : ''}.mp4`;
 
+    // 🔥 OBTENER HABITACIÓN Y SECCIÓN ACTUAL CORRECTAMENTE
+    let currentRoom = window.habitacionActual;
+    let currentSection = window.seccionActual;
+
+    // Si no están definidas, intentar obtenerlas desde el botón
+    if (!currentRoom || !currentSection) {
+        const dataHabitacion = button.dataset.habitacion;
+        const dataSeccion = button.dataset.seccion;
+        
+        if (dataHabitacion) currentRoom = dataHabitacion;
+        if (dataSeccion) currentSection = dataSeccion;
+    }
+
+    // También intentar obtenerlas desde getRutaBase si existe
+    if (!currentRoom || !currentSection) {
+        if (typeof getRutaBase === 'function') {
+            const ruta = getRutaBase();
+            const partes = ruta.split('/');
+            if (partes.length >= 3) {
+                currentRoom = partes[1];
+                currentSection = partes[2];
+            }
+        }
+    }
+
+    // Fallback final solo si realmente no hay nada
+    if (!currentRoom) currentRoom = 'habitacion_1';
+    if (!currentSection) currentSection = 'seccion_1';
+
+    console.log(`🎬 Reproduciendo: ${audioName} en ${currentRoom}/${currentSection}`);
+
     const loader = document.getElementById("avatar-loader");
     const avatar = document.getElementById("avatar");
     const video = document.getElementById("aiko-video");
@@ -390,10 +421,10 @@ async function reproducirAudioOptimizado(button) {
     if (loader) loader.classList.remove("hidden");
 
     try {
-        // 🎬 OBTENER VIDEO DEL SISTEMA OPTIMIZADO
+        // 🎬 OBTENER VIDEO DEL SISTEMA OPTIMIZADO con rutas correctas
         const preloadedVideo = await optimizedPreloader.getVideo(
-            window.habitacionActual || 'habitacion_1',
-            window.seccionActual || 'seccion_1',
+            currentRoom,
+            currentSection,
             audioName
         );
 
@@ -432,10 +463,8 @@ async function reproducirAudioOptimizado(button) {
         if (video) video.classList.remove("playing");
     }
 
-    // 📝 CARGAR SUBTÍTULOS (mantener tu lógica existente)
-    const habitacion = window.habitacionActual || 'habitacion_1';
-    const seccion = window.seccionActual || 'seccion_1';
-    const ruta = `habitaciones/${habitacion}/${seccion}`;
+    // 📝 CARGAR SUBTÍTULOS con rutas correctas
+    const ruta = `habitaciones/${currentRoom}/${currentSection}`;
     
     fetch(`${ruta}/textos/${audioName.replace('.mp4', '.txt')}`)
         .then(res => res.ok ? res.text() : "")
