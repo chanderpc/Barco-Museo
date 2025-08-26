@@ -171,9 +171,13 @@ function inicializarSelectorAvatares() {
 
     div.onclick = () => {
       avatarSeleccionado = id;    
-      // 🔥 USAR EL SISTEMA OPTIMIZADO
-      window.changeGuide(id);
-      // Desmarcar anteriores y marcar este
+      
+      // 🔥 USAR EL SISTEMA OPTIMIZADO - CORREGIDO
+      if (window.changeGuide) {
+        window.changeGuide(id);
+      }
+      
+      // Resto del código igual...
       document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove("selected"));
       div.classList.add("selected");    
 
@@ -185,6 +189,7 @@ function inicializarSelectorAvatares() {
         avatarImg.src = datos.imagen;
         avatarImg.classList.remove("hidden");
       }
+      
       // Detener cualquier otro video en reproducción
       document.querySelectorAll(".video-bienvenida").forEach(v => {
         v.pause();
@@ -221,9 +226,9 @@ function inicializarSelectorAvatares() {
     contenedor.appendChild(div);
   }
   const seleccionado = document.querySelector('.avatar-option.selected');
-if (seleccionado) {
-  seleccionado.click();
-}
+  if (seleccionado) {
+    seleccionado.click();
+  }
 }
 
 /*-------------------Juego----------------------------*/
@@ -493,11 +498,15 @@ function mostrarImagen(index) {
   });
 }
 
-
-/* llama a cambiar habitacion */
+// 1. Actualizar la función irAHabitacion para usar el sistema optimizado
 async function irAHabitacion(habitacionID, seccionID) {
   mostrarLoaderHabitacion();
-  window.navigateToRoom(habitacionID);
+  
+  // 🔥 USAR EL SISTEMA OPTIMIZADO - CORREGIDO
+  if (window.navigateToRoom) {
+    window.navigateToRoom(habitacionID);
+  }
+  
   bloqueActual = 0;
   const galeriaSlider = document.getElementById("galeria-slider");
   galeriaSlider.classList.remove("hidden");
@@ -505,8 +514,6 @@ async function irAHabitacion(habitacionID, seccionID) {
   generarBotonesSecciones(habitacionID);
 
   habitacionActual = habitacionID;
-
-  // ✅ Corrige esto: usa seccionID si viene, si no deja la actual o por defecto
   seccionActual = seccionID || seccionActual || 'seccion_1';
 
   aplicarTemaPorHabitacion(habitacionID);
@@ -536,13 +543,16 @@ async function irAHabitacion(habitacionID, seccionID) {
     const accion = btn.getAttribute('onclick');
     btn.classList.toggle('activo', accion && accion.includes(habitacionID));
   });
-  navigateToRoom(habitacionID);
 }
 
-/* cambiar entre habitaciones ===========================*/
 async function cambiarSeccion(seccionID) {
   seccionActual = seccionID;
-  window.navigateToSection(habitacionActual, seccionID);
+  
+  // 🔥 USAR EL SISTEMA OPTIMIZADO - CORREGIDO
+  if (window.navigateToSection) {
+    window.navigateToSection(habitacionActual, seccionID);
+  }
+  
   const ruta = getRutaBase();
 
   fetch(`${ruta}/data.json`)
@@ -589,25 +599,21 @@ async function cambiarSeccion(seccionID) {
       subtitulosPorCaja = data.subtitulos || [];
       marcarBotonActivo(seccionID);
       inicializarImagenes();
-      // Pre-cargar primera imagen antes de mostrarla
-      const primeraURL = imagenesPorCaja[0]?.[0];
+      
+      // CORREGIDO: Solo reproducir si ya comenzó oficialmente
       const botonAudio = document.querySelector('.imagen-caja .btn-audio');
       if (!isWelcomePlaying && yaComenzo && botonAudio) {
-        reproducirAudio(botonAudio); // Paralelo
+        // Pequeño delay para evitar reproducción muy rápida
+        setTimeout(() => {
+          reproducirAudio(botonAudio);
+        }, 500);
       }
 
-      mostrarImagen(0); // Mostrar inmediatamente (la imagen se cargará en segundo plano)
-
-      if (!isWelcomePlaying && yaComenzo && botonAudio) {
-        reproducirAudio(botonAudio); // Reproducir sin esperar a la imagen
-      } 
-
-      })
+      mostrarImagen(0);
+    });
         
-        await esperar(300);
-        ocultarLoaderHabitacion(); // Por si falla
-
-        navigateToSection(habitacionActual, seccionID);
+    await esperar(300);
+    ocultarLoaderHabitacion();
 }
 
 function inicializarImagenes() {
@@ -669,79 +675,6 @@ function playClickSound() {
   }
 }
 
-async function reproducirAudio(button) {
-  if (button.classList.contains("btn-audio")) {
-    button.disabled = true;
-    button.classList.add("disabled-temporal");
-    setTimeout(() => {
-      button.disabled = false;
-      button.classList.remove("disabled-temporal");
-    }, 3000);
-  }
-
-  playClickSound();
-
-  const contenedor = button.closest('.imagen-caja');
-  const index = parseInt(contenedor.dataset.index);
-  const step = parseInt(contenedor.dataset.step);
-  const audioName = `video${index + 1}${step > 0 ? `_sub${step}` : ''}.mp4`;
-
-  const loader = document.getElementById("avatar-loader");
-  const avatar = document.getElementById("avatar");
-  const video = document.getElementById("aiko-video");
-
-  avatar.classList.remove("hidden");
-  video.classList.remove("playing");
-  loader.classList.remove("hidden");
-
-  try {
-    // 🎬 Usar el sistema optimizado
-    const preloadedVideo = await optimizedPreloader.getVideo(
-      habitacionActual, 
-      seccionActual, 
-      audioName
-    );
-
-    if (preloadedVideo) {
-      video.src = preloadedVideo.src;
-      video.currentTime = 0;
-
-      video.oncanplay = () => {
-        loader.classList.add("hidden");
-        avatar.classList.add("hidden");
-        video.classList.add("playing");
-        video.play().catch(() => {
-          avatar.classList.remove("hidden");
-          video.classList.remove("playing");
-        });
-      };
-    } else {
-      // Sin video disponible
-      loader.classList.add("hidden");
-      avatar.classList.remove("hidden");
-      video.classList.remove("playing");
-    }
-
-  } catch (error) {
-    console.error("Error reproduciendo video:", error);
-    loader.classList.add("hidden");
-    avatar.classList.remove("hidden");
-    video.classList.remove("playing");
-  }
-
-  // Subtítulos (mantener igual)
-  const ruta = getRutaBase();
-  fetch(`${ruta}/textos/${audioName.replace('.mp4', '.txt')}`)
-    .then(res => res.ok ? res.text() : "")
-    .then(texto => {
-      const dialogueBox = document.getElementById("dialogue-box");
-      if (dialogueBox) {
-        escribirTextoGradualmente(texto || "", dialogueBox, 60);
-      }
-    })
-    .catch(err => console.warn("No se pudo cargar el texto:", err));
-}
-
 /* cambio de sub imagenes ====================================*/
 function cambiarSubimagen(button) {
   const contenedor = button.closest('.imagen-caja');
@@ -772,31 +705,39 @@ function cambiarSubimagen(button) {
 
     // ⚡ Imagen y audio al mismo tiempo
     const nuevaRuta = `${getRutaBase()}/imagenes/${lista[step].replace(/^.*\//, '')}`;
-    img.src = nuevaRuta; // ← empieza a cargar de inmediato
-        // 🔥 ACTUALIZAR DATA ATTRIBUTES ANTES DE REPRODUCIR
-    button.dataset.habitacion = habitacionActual;
-    button.dataset.seccion = seccionActual;
-    reproducirAudio(button); // ← también inmediatamente
+    img.src = nuevaRuta;
+    
+    // 🔥 ACTUALIZAR DATA ATTRIBUTES ANTES DE REPRODUCIR
+    const botonAudio = contenedor.querySelector('.btn-audio');
+    if (botonAudio) {
+      botonAudio.dataset.habitacion = habitacionActual;
+      botonAudio.dataset.seccion = seccionActual;
+      
+      // IMPORTANTE: Reproducir después de que la imagen se haya cargado
+      img.onload = () => {
+        contenedor.removeChild(overlay);
 
-    img.onload = () => {
-      contenedor.removeChild(overlay);
+        // Actualiza subtítulo
+        const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
+        const subtitulo = subtitulosPorCaja[index]?.[step] || "";
+        if (subtituloCaja) subtituloCaja.textContent = subtitulo;
 
-      // Actualiza subtítulo
-      const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
-      const subtitulo = subtitulosPorCaja[index]?.[step] || "";
-      if (subtituloCaja) subtituloCaja.textContent = subtitulo;
+        // Animación de entrada
+        img.classList.remove("slide-out-left");
+        img.classList.add("slide-in-right");
+        setTimeout(() => img.classList.remove("slide-in-right"), 400);
 
-      // Animación de entrada
-      img.classList.remove("slide-out-left");
-      img.classList.add("slide-in-right");
-      setTimeout(() => img.classList.remove("slide-in-right"), 400);
-
-      // Mostrar u ocultar flechas según paso
-      retro.style.display = step > 0 ? "block" : "none";
-      avanzar.style.display = step >= lista.length - 1 ? "none" : "block";
-    };
+        // Mostrar u ocultar flechas según paso
+        retro.style.display = step > 0 ? "block" : "none";
+        avanzar.style.display = step >= lista.length - 1 ? "none" : "block";
+        
+        // Reproducir audio DESPUÉS de que todo esté listo
+        reproducirAudio(botonAudio);
+      };
+    }
   }
 }
+
 
 function retrocederSubimagen(button) {
   const contenedor = button.closest('.imagen-caja');
@@ -837,10 +778,16 @@ function retrocederSubimagen(button) {
       setTimeout(() => img.classList.remove("slide-in-left"), 400);
 
       // 🔥 ACTUALIZAR DATA ATTRIBUTES ANTES DE REPRODUCIR
-      button.dataset.habitacion = habitacionActual;
-      button.dataset.seccion = seccionActual;
-      reproducirAudio(button);
+      const botonAudio = contenedor.querySelector('.btn-audio');
+      if (botonAudio) {
+        botonAudio.dataset.habitacion = habitacionActual;
+        botonAudio.dataset.seccion = seccionActual;
+        
+        // Reproducir audio
+        reproducirAudio(botonAudio);
+      }
     };
+    
     img.src = `${getRutaBase()}/imagenes/${lista[step].replace(/^.*\//, '')}`;
   }
 }
