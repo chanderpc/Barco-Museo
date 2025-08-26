@@ -1284,6 +1284,9 @@ document.addEventListener("DOMContentLoaded", () => {
     cerrarJuegoYVolverImagen?.();        // Oculta el quiz
     cerrarImagenSuperpuesta?.();         // Oculta el mapa
     detenerVideoBienvenida()
+    btnAudio.classList.add("hidden");
+    audio.pause()
+    audioPlayer.classList.add("hidden");
   });
 
   btnQuiz?.addEventListener("click", () => {
@@ -1293,6 +1296,9 @@ document.addEventListener("DOMContentLoaded", () => {
     iniciarJuego?.();
     detenerGuia();
     detenerVideoBienvenida()
+    btnAudio.classList.add("hidden");
+    audio.pause()
+    audioPlayer.classList.add("hidden");
   });
 });
 
