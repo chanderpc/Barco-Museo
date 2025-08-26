@@ -1101,7 +1101,21 @@ function siguientePregunta() {
 }
 
 function mostrarPantallaFinal() {
-  const mensajeExtra = document.getElementById("mensaje-extra");
+  mostrarImagenFinal(respuestasCorrectas);
+
+  const mensajeFinal = document.getElementById("mensaje-final");
+
+  if (respuestasCorrectas <= 2) {
+    mensajeFinal.textContent = "❗Sigue intentando";
+    mensajeFinal.style.color = "crimson";
+  } else if (respuestasCorrectas <= 5) {
+    mensajeFinal.textContent = "Buen intento 💡";
+    mensajeFinal.style.color = "#eca304"; // amarillo
+  } else {
+    mensajeFinal.textContent = "🎉¡Felicidades!🎉";
+    mensajeFinal.style.color = "#2ecc71"; // verde
+  }
+ const mensajeExtra = document.getElementById("mensaje-extra");
   mensajeExtra.innerHTML = `Terminaste el QUIZ ✅<br><strong>Respuestas correctas: ${respuestasCorrectas} de ${preguntasGrupoActual.length}</strong>`;
   document.getElementById("juego-imagen").classList.add("hidden");
   document.getElementById("fondo-opciones").classList.add("hidden");
@@ -1147,7 +1161,25 @@ document.addEventListener("visibilitychange", () => {
     }
   }
 });
+function mostrarImagenFinal(respuestasCorrectas) {
+  const imagenFinal = document.getElementById("imagen-final-resultado");
 
+  let opciones = [];
+
+  if (respuestasCorrectas <= 2) {
+    opciones = ["bajo1.webp", "bajo2.webp"];
+  } else if (respuestasCorrectas <= 5) {
+    opciones = ["medio1.webp", "medio2.webp", "medio3.webp"];
+  } else {
+    opciones = ["alto1.webp", "alto2.webp"];
+  }
+
+  // Elegir aleatoria
+  const imagenElegida = opciones[Math.floor(Math.random() * opciones.length)];
+
+  // Asignar ruta
+  imagenFinal.src = `juego/imagen-final/${imagenElegida}`;
+}
 /*-------------------Juego----------------------------*/
 function esperar(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -1388,3 +1420,34 @@ audio.addEventListener("timeupdate", () => {
 progress.addEventListener("input", () => {
   audio.currentTime = progress.value;
 });
+
+/*Full-S*/
+function activarPantallaCompleta() {
+  const elem = document.documentElement;
+
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { 
+    elem.webkitRequestFullscreen(); // Safari
+  } else if (elem.msRequestFullscreen) { 
+    elem.msRequestFullscreen(); // IE11
+  }
+
+  // Cambiar botones
+  document.getElementById("btn-fullscreen").classList.add("hidden");
+  document.getElementById("btn-exit-fullscreen").classList.remove("hidden");
+}
+
+function salirPantallaCompleta() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) {
+    document.msExitFullscreen();
+  }
+
+  // Cambiar botones
+  document.getElementById("btn-exit-fullscreen").classList.add("hidden");
+  document.getElementById("btn-fullscreen").classList.remove("hidden");
+}
