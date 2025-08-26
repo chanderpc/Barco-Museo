@@ -30,46 +30,25 @@
       <!-- Audio -->
       <audio id="audio" src="Bnv-Museo-Inicio.wav"></audio>
     </div>
+    
     <div id="fixed-header">
       APROFERROL S.A.
       <button id="btn-configuracion" title="Configuración">⚙️</button>
+      <div class="fullscreen-controls">
+      <button id="btn-fullscreen" onclick="activarPantallaCompleta()">⛶</button>
+      <button id="btn-exit-fullscreen" class="hidden" onclick="salirPantallaCompleta()">×</button>
+      </div>
     </div>
 
     <div id="fixed-footer">
+      
       Nissi industrial © ⚓
       <button id="toggle-navegacion" title="Mostrar menú" disabled>☰</button>
+      
     </div>
 
   <!-- Pantalla de bienvenida -->
     <div id="welcome-screen">
-<button onclick="activarPantallaCompleta()">⛶ Pantalla completa</button>
-
-<script>
-function activarPantallaCompleta() {
-  const elem = document.documentElement; // toda la página web
-
-  if (elem.requestFullscreen) {
-    elem.requestFullscreen(); // Navegadores modernos
-  } else if (elem.webkitRequestFullscreen) {
-    elem.webkitRequestFullscreen(); // Safari
-  } else if (elem.msRequestFullscreen) {
-    elem.msRequestFullscreen(); // IE11
-  }
-}
-</script>
-<button onclick="salirPantallaCompleta()">❌ Salir de pantalla completa</button>
-
-<script>
-function salirPantallaCompleta() {
-  if (document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if (document.webkitExitFullscreen) {
-    document.webkitExitFullscreen(); // Safari
-  } else if (document.msExitFullscreen) {
-    document.msExitFullscreen(); // IE11
-  }
-}
-</script>
       <!-- Logo debajo del encabezado -->
       <img id="welcome-logo" src="logo.jpg" oncontextmenu="return false;" alt="Logo del museo">
       <div id="avatar-selector">
@@ -191,6 +170,7 @@ function salirPantallaCompleta() {
        <!-- Contenedor para los botones de navegación -->
         
       <div id="pantalla-final" class="hidden">
+        <img id="imagen-final-resultado" src="" alt="Resultado final">
         <h2 id="mensaje-final">🎉 ¡Felicidades! 🎉</h2>
         <p id="mensaje-extra">Terminaste el QUIZ ✅</p>
         <p id="mensaje-extra1"></p>
