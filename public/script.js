@@ -171,7 +171,8 @@ function inicializarSelectorAvatares() {
 
     div.onclick = () => {
       avatarSeleccionado = id;    
-      optimizedPreloader.changeGuide(id);
+      // 🔥 USAR EL SISTEMA OPTIMIZADO
+      window.changeGuide(id);
       // Desmarcar anteriores y marcar este
       document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove("selected"));
       div.classList.add("selected");    
@@ -496,7 +497,7 @@ function mostrarImagen(index) {
 /* llama a cambiar habitacion */
 async function irAHabitacion(habitacionID, seccionID) {
   mostrarLoaderHabitacion();
-  optimizedPreloader.preloadRoom(habitacionID);
+  window.navigateToRoom(habitacionID);
   bloqueActual = 0;
   const galeriaSlider = document.getElementById("galeria-slider");
   galeriaSlider.classList.remove("hidden");
@@ -541,6 +542,7 @@ async function irAHabitacion(habitacionID, seccionID) {
 /* cambiar entre habitaciones ===========================*/
 async function cambiarSeccion(seccionID) {
   seccionActual = seccionID;
+  window.navigateToSection(habitacionActual, seccionID);
   const ruta = getRutaBase();
 
   fetch(`${ruta}/data.json`)
@@ -771,6 +773,9 @@ function cambiarSubimagen(button) {
     // ⚡ Imagen y audio al mismo tiempo
     const nuevaRuta = `${getRutaBase()}/imagenes/${lista[step].replace(/^.*\//, '')}`;
     img.src = nuevaRuta; // ← empieza a cargar de inmediato
+        // 🔥 ACTUALIZAR DATA ATTRIBUTES ANTES DE REPRODUCIR
+    button.dataset.habitacion = habitacionActual;
+    button.dataset.seccion = seccionActual;
     reproducirAudio(button); // ← también inmediatamente
 
     img.onload = () => {
@@ -831,6 +836,9 @@ function retrocederSubimagen(button) {
       img.classList.add("slide-in-left");
       setTimeout(() => img.classList.remove("slide-in-left"), 400);
 
+      // 🔥 ACTUALIZAR DATA ATTRIBUTES ANTES DE REPRODUCIR
+      button.dataset.habitacion = habitacionActual;
+      button.dataset.seccion = seccionActual;
       reproducirAudio(button);
     };
     img.src = `${getRutaBase()}/imagenes/${lista[step].replace(/^.*\//, '')}`;
