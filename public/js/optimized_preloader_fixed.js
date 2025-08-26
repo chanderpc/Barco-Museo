@@ -1,17 +1,17 @@
-// Sistema de Precarga Optimizado para Barco Museo - CORREGIDO
-// Evita duplicados y coordina la carga de videos
+// Sistema de Precarga Optimizado para Barco Museo - SIN DUPLICADOS
+// Versión corregida que elimina completamente las cargas duplicadas
 
 class OptimizedVideoPreloader {
     constructor() {
         this.videoPool = new Map(); // Pool único de videos
-        this.loadingPromises = new Map(); // Promesas de carga activas
+        this.pendingRequests = new Map(); // Promesas de carga activas - CLAVE PARA EVITAR DUPLICADOS
         this.currentGuide = 'Andrea_anime'; // Guía por defecto
         this.currentRoom = null;
         this.currentSection = null;
-        this.maxConcurrentLoads = 3; // Máximo 3 videos cargando simultáneamente
+        this.maxConcurrentLoads = 2; // Reducido a 2 para evitar saturar
         this.currentlyLoading = 0;
         
-        // Configuración de habitaciones basada en tu código actual
+        // Configuración de habitaciones
         this.roomConfig = {
             habitacion_1: {
                 totalSections: 16,
@@ -48,9 +48,6 @@ class OptimizedVideoPreloader {
             'bryan': 'Bryan',
             'maria': 'Maria'
         };
-
-        // 🔥 NUEVO: Sistema de dedupe para evitar cargas múltiples
-        this.pendingRequests = new Map();
     }
 
     // Generar clave única para cada video
@@ -65,7 +62,7 @@ class OptimizedVideoPreloader {
         return `habitaciones/${roomId}/${sectionId}/videos/${guide}/${videoName}`;
     }
 
-    // 🚀 MÉTODO PRINCIPAL - DEDUPLICADO
+    // 🚀 MÉTODO PRINCIPAL - CON DEDUPLICACIÓN REFORZADA
     async getVideo(roomId, sectionId, videoName) {
         const videoKey = this.generateVideoKey(roomId, sectionId, videoName);
         
@@ -78,10 +75,16 @@ class OptimizedVideoPreloader {
             return video;
         }
 
-        // 2️⃣ Si hay una petición pendiente para este mismo video, esperarla
+        // 2️⃣ CRUCIAL: Si hay una petición pendiente, esperarla
         if (this.pendingRequests.has(videoKey)) {
             console.log(`⏳ Esperando carga existente de: ${videoName}`);
-            return await this.pendingRequests.get(videoKey);
+            try {
+                return await this.pendingRequests.get(videoKey);
+            } catch (error) {
+                console.error(`❌ Error en carga pendiente: ${videoName}`, error);
+                this.pendingRequests.delete(videoKey);
+                return null;
+            }
         }
 
         // 3️⃣ Crear nueva petición
@@ -91,8 +94,11 @@ class OptimizedVideoPreloader {
         try {
             const result = await loadPromise;
             return result;
+        } catch (error) {
+            console.error(`❌ Error cargando ${videoName}:`, error);
+            return null;
         } finally {
-            // ✅ Limpiar la petición pendiente cuando termine
+            // ✅ SIEMPRE limpiar la petición pendiente
             this.pendingRequests.delete(videoKey);
         }
     }
@@ -118,18 +124,22 @@ class OptimizedVideoPreloader {
             }
             
             return video;
-        } catch (error) {
-            console.error(`❌ Error cargando ${videoName}:`, error);
-            return null;
         } finally {
             this.currentlyLoading--;
         }
     }
 
-    // 🎥 CREAR ELEMENTO VIDEO
+    // 🎥 CREAR ELEMENTO VIDEO - OPTIMIZADO
     createVideoElement(videoKey, videoURL, videoName) {
         return new Promise((resolve) => {
-            // Verificar primero si el archivo existe
+            // VERIFICACIÓN TEMPRANA: ¿ya existe el video?
+            if (this.videoPool.has(videoKey)) {
+                console.log(`⚡ Video ya existe durante creación: ${videoName}`);
+                resolve(this.videoPool.get(videoKey));
+                return;
+            }
+
+            // Verificar si el archivo existe
             fetch(videoURL, { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
@@ -168,13 +178,13 @@ class OptimizedVideoPreloader {
                     video.addEventListener('loadeddata', handleSuccess, { once: true });
                     video.addEventListener('error', handleError, { once: true });
 
-                    // Timeout de seguridad
+                    // Timeout de seguridad reducido
                     setTimeout(() => {
                         if (!resolved) {
                             console.warn(`⚠️ Timeout cargando: ${videoName}`);
                             handleError(new Error('Timeout'));
                         }
-                    }, 8000);
+                    }, 5000); // Reducido a 5 segundos
 
                     // 🚀 INICIAR CARGA
                     video.src = videoURL;
@@ -193,7 +203,7 @@ class OptimizedVideoPreloader {
                 if (this.currentlyLoading < this.maxConcurrentLoads) {
                     resolve();
                 } else {
-                    setTimeout(checkSlot, 200);
+                    setTimeout(checkSlot, 300); // Aumentado el intervalo
                 }
             };
             checkSlot();
@@ -211,66 +221,49 @@ class OptimizedVideoPreloader {
             return;
         }
 
-        // Precargar solo los primeros videos de las primeras 3 secciones
-        const preloadPromises = [];
-        const sectionsToPreload = Math.min(3, config.totalSections);
+        // Precargar solo los primeros videos de las primeras 2 secciones
+        const sectionsToPreload = Math.min(2, config.totalSections);
 
         for (let i = 1; i <= sectionsToPreload; i++) {
             const sectionId = `seccion_${i}`;
-            const firstVideo = config.videosPerSection[0]; // Primer video de cada sección
+            const firstVideo = config.videosPerSection[0];
 
             if (firstVideo) {
-                // 🚀 Usar loadVideoInternal directamente para evitar duplicar lógica
                 const videoKey = this.generateVideoKey(roomId, sectionId, firstVideo);
                 
+                // Solo precargar si NO existe y NO está siendo cargado
                 if (!this.videoPool.has(videoKey) && !this.pendingRequests.has(videoKey)) {
-                    const promise = this.loadVideoInternal(roomId, sectionId, firstVideo, videoKey)
-                        .catch(err => console.warn(`Falló precarga de ${roomId}/${sectionId}/${firstVideo}:`, err));
-                    preloadPromises.push(promise);
+                    // Usar setTimeout para no bloquear
+                    setTimeout(() => {
+                        this.getVideo(roomId, sectionId, firstVideo)
+                            .catch(err => console.warn(`Falló precarga de ${roomId}/${sectionId}/${firstVideo}:`, err));
+                    }, i * 500); // Escalonar las cargas
                 }
             }
         }
-
-        // Iniciar todas las precargas sin esperar
-        Promise.allSettled(preloadPromises).then(results => {
-            const successful = results.filter(r => r.status === 'fulfilled' && r.value !== null).length;
-            console.log(`🎬 Habitación ${roomId}: ${successful}/${preloadPromises.length} videos precargados`);
-        });
     }
 
-    // 📍 PRECARGAR SECCIÓN ESPECÍFICA
+    // 📄 PRECARGAR SECCIÓN ESPECÍFICA
     async preloadSection(roomId, sectionId) {
-        console.log(`📍 Precargando sección: ${roomId}/${sectionId}`);
+        console.log(`📄 Precargando sección: ${roomId}/${sectionId}`);
         this.currentSection = sectionId;
 
         const config = this.roomConfig[roomId];
         if (!config) return;
 
-        // Precargar todos los videos de la sección actual
-        const preloadPromises = config.videosPerSection.map((videoName, index) => {
+        // Precargar videos de la sección con prioridad al primero
+        config.videosPerSection.forEach((videoName, index) => {
             const videoKey = this.generateVideoKey(roomId, sectionId, videoName);
             
             // Solo precargar si no existe ya
             if (!this.videoPool.has(videoKey) && !this.pendingRequests.has(videoKey)) {
-                // Prioridad: primer video inmediatamente, otros con delay
-                const delay = index === 0 ? 0 : index * 300;
+                const delay = index === 0 ? 0 : index * 400; // Más espacio entre cargas
                 
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        this.loadVideoInternal(roomId, sectionId, videoName, videoKey)
-                            .then(resolve)
-                            .catch(err => {
-                                console.warn(`Falló precarga de ${videoName}:`, err);
-                                resolve(null);
-                            });
-                    }, delay);
-                });
+                setTimeout(() => {
+                    this.getVideo(roomId, sectionId, videoName)
+                        .catch(err => console.warn(`Falló precarga de ${videoName}:`, err));
+                }, delay);
             }
-            return Promise.resolve(null);
-        });
-
-        Promise.allSettled(preloadPromises).then(() => {
-            console.log(`📍 Sección ${sectionId} precargada completamente`);
         });
     }
 
@@ -284,9 +277,9 @@ class OptimizedVideoPreloader {
         // Limpiar pool completo
         this.clearPool();
         
-        // Reprecargar habitación actual con nueva guía
+        // Reprecargar habitación actual con nueva guía después de un delay
         if (this.currentRoom) {
-            setTimeout(() => this.preloadRoom(this.currentRoom), 500);
+            setTimeout(() => this.preloadRoom(this.currentRoom), 1000);
         }
     }
 
@@ -302,40 +295,7 @@ class OptimizedVideoPreloader {
         });
         
         this.videoPool.clear();
-        this.pendingRequests.clear(); // 🔥 También limpiar peticiones pendientes
-    }
-
-    // 🗑️ LIMPIAR NO UTILIZADOS
-    cleanupUnused() {
-        if (this.videoPool.size <= 8) return;
-
-        const currentRoomPattern = this.currentRoom ? `${this.currentRoom}/` : '';
-        const currentSectionPattern = this.currentSection ? `/${this.currentSection}/` : '';
-        
-        const toKeep = new Map();
-        const toRemove = [];
-
-        this.videoPool.forEach((video, key) => {
-            const isCurrentRoom = key.includes(currentRoomPattern);
-            const isCurrentSection = key.includes(currentSectionPattern);
-            
-            if (isCurrentRoom || isCurrentSection) {
-                toKeep.set(key, video);
-            } else {
-                toRemove.push({ key, video });
-            }
-        });
-
-        // Remover videos no relevantes
-        toRemove.forEach(({ key, video }) => {
-            if (video) {
-                video.src = '';
-                video.load();
-            }
-            this.videoPool.delete(key);
-        });
-
-        console.log(`🧹 Limpieza: mantenidos ${toKeep.size}, removidos ${toRemove.length}`);
+        this.pendingRequests.clear(); // IMPORTANTE: También limpiar peticiones pendientes
     }
 
     // 📊 ESTADÍSTICAS
@@ -346,28 +306,30 @@ class OptimizedVideoPreloader {
             currentSection: this.currentSection,
             videosInPool: this.videoPool.size,
             currentlyLoading: this.currentlyLoading,
-            pendingRequests: this.pendingRequests.size,
-            loadingPromises: this.loadingPromises.size
+            pendingRequests: this.pendingRequests.size
         };
     }
 }
 
-// 🌍 INSTANCIA GLOBAL
+// 🌐 INSTANCIA GLOBAL
 const optimizedPreloader = new OptimizedVideoPreloader();
 
-// 🔗 INTEGRACIÓN CON TU CÓDIGO EXISTENTE
+// 📗 INTEGRACIÓN CON TU CÓDIGO EXISTENTE
 window.videoPreloader = optimizedPreloader;
 
-// 🎵 FUNCIÓN OPTIMIZADA PARA REPRODUCIR AUDIO (reemplaza completamente la tuya)
+// 🎵 FUNCIÓN OPTIMIZADA PARA REPRODUCIR AUDIO (REEMPLAZA COMPLETAMENTE la función original)
 async function reproducirAudioOptimizado(button) {
     // Prevenir múltiples clics
     if (button.classList.contains("btn-audio")) {
+        if (button.disabled) return; // Ya está procesando
+        
         button.disabled = true;
         button.classList.add("disabled-temporal");
+        
         setTimeout(() => {
             button.disabled = false;
             button.classList.remove("disabled-temporal");
-        }, 3000);
+        }, 2000);
     }
 
     // Sonido de clic
@@ -380,34 +342,13 @@ async function reproducirAudioOptimizado(button) {
     const step = parseInt(contenedor.dataset.step);
     const audioName = `video${index + 1}${step > 0 ? `_sub${step}` : ''}.mp4`;
 
-    // 🔥 OBTENER HABITACIÓN Y SECCIÓN ACTUAL CORRECTAMENTE
-    let currentRoom = window.habitacionActual;
-    let currentSection = window.seccionActual;
+    // 🔥 OBTENER HABITACIÓN Y SECCIÓN ACTUAL
+    let currentRoom = window.habitacionActual || 'habitacion_1';
+    let currentSection = window.seccionActual || 'seccion_1';
 
-    // Si no están definidas, intentar obtenerlas desde el botón
-    if (!currentRoom || !currentSection) {
-        const dataHabitacion = button.dataset.habitacion;
-        const dataSeccion = button.dataset.seccion;
-        
-        if (dataHabitacion) currentRoom = dataHabitacion;
-        if (dataSeccion) currentSection = dataSeccion;
-    }
-
-    // También intentar obtenerlas desde getRutaBase si existe
-    if (!currentRoom || !currentSection) {
-        if (typeof getRutaBase === 'function') {
-            const ruta = getRutaBase();
-            const partes = ruta.split('/');
-            if (partes.length >= 3) {
-                currentRoom = partes[1];
-                currentSection = partes[2];
-            }
-        }
-    }
-
-    // Fallback final solo si realmente no hay nada
-    if (!currentRoom) currentRoom = 'habitacion_1';
-    if (!currentSection) currentSection = 'seccion_1';
+    // Intentar obtener desde data attributes del botón
+    if (button.dataset.habitacion) currentRoom = button.dataset.habitacion;
+    if (button.dataset.seccion) currentSection = button.dataset.seccion;
 
     console.log(`🎬 Reproduciendo: ${audioName} en ${currentRoom}/${currentSection}`);
 
@@ -421,7 +362,7 @@ async function reproducirAudioOptimizado(button) {
     if (loader) loader.classList.remove("hidden");
 
     try {
-        // 🎬 OBTENER VIDEO DEL SISTEMA OPTIMIZADO con rutas correctas
+        // 🎬 OBTENER VIDEO DEL SISTEMA OPTIMIZADO
         const preloadedVideo = await optimizedPreloader.getVideo(
             currentRoom,
             currentSection,
@@ -463,7 +404,7 @@ async function reproducirAudioOptimizado(button) {
         if (video) video.classList.remove("playing");
     }
 
-    // 📝 CARGAR SUBTÍTULOS con rutas correctas
+    // 📄 CARGAR SUBTÍTULOS
     const ruta = `habitaciones/${currentRoom}/${currentSection}`;
     
     fetch(`${ruta}/textos/${audioName.replace('.mp4', '.txt')}`)
@@ -481,13 +422,10 @@ async function reproducirAudioOptimizado(button) {
 window.navigateToRoom = function(roomId) {
     console.log(`🏠 Navegación optimizada a: ${roomId}`);
     optimizedPreloader.preloadRoom(roomId);
-    
-    // Limpiar videos no utilizados después de un tiempo
-    setTimeout(() => optimizedPreloader.cleanupUnused(), 5000);
 };
 
 window.navigateToSection = function(roomId, sectionId) {
-    console.log(`📍 Navegación optimizada a: ${roomId}/${sectionId}`);
+    console.log(`📄 Navegación optimizada a: ${roomId}/${sectionId}`);
     optimizedPreloader.preloadSection(roomId, sectionId);
 };
 
@@ -495,7 +433,7 @@ window.changeGuide = function(guideName) {
     optimizedPreloader.changeGuide(guideName);
 };
 
-// 🐛 DEBUG
+// 🛠 DEBUG
 window.showPreloaderStats = function() {
     console.log('📊 Estadísticas del preloader:', optimizedPreloader.getStats());
 };
@@ -503,4 +441,4 @@ window.showPreloaderStats = function() {
 // ✅ REEMPLAZAR LA FUNCIÓN reproducirAudio GLOBALMENTE
 window.reproducirAudio = reproducirAudioOptimizado;
 
-console.log('🚀 Sistema de precarga optimizado inicializado y mejorado');
+console.log('🚀 Sistema de precarga optimizado inicializado - SIN DUPLICADOS');
