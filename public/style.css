@@ -150,7 +150,7 @@ body {
   position: fixed;
   top: 7px;    
   left: 8px;   
-  z-index: 10002;
+  z-index: 10001;
 }
 
 .fullscreen-controls button {
@@ -998,11 +998,13 @@ body {
 
 /* ===== PANTALLA FINAL ===== */
 #pantalla-final {
+  position: relative; /* ✅ importante para referencia */
+  padding-top: 60px;  /* espacio para que la imagen no se corte */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 20px 20px;
   text-align: center;
   background-color: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
@@ -1593,3 +1595,20 @@ body.modo-claro .flecha-derecha {
 }
 body.modo-claro #barra-navegacion {
   background-color: #003366d7;}
+
+/*=====================EXTRAS=========*/
+button,
+img,
+.card,
+.dialogue-wrapper,
+#galeria-slider {
+  transition: all 0.3s ease;
+}
+@keyframes celebrate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+#pantalla-final h2 {
+  animation: celebrate 0.7s ease alternate 2;
+}
