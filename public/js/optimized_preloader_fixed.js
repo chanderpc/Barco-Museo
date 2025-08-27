@@ -1,6 +1,6 @@
 // Sistema de Precarga CON REUTILIZACIÓN REAL - Evita redescargas
 // Solución que reutiliza videos sin triggerar nuevas descargas
-
+let currentlyPlayingPromise = null;
 class TrueCacheVideoPreloader {
     constructor() {
         this.videoPool = new Map();
@@ -227,17 +227,23 @@ async function reproducirAudioConCache(button) {
         return;
     }
 
+    // ✅ OBTENER DATOS ACTUALIZADOS DEL CONTENEDOR Y BOTÓN
     const index = parseInt(contenedor.dataset.index) || 0;
     const step = parseInt(contenedor.dataset.step) || 0;
+    
+    // Construir nombre de audio basado en datos actuales
     const audioName = `video${index + 1}${step > 0 ? `_sub${step}` : ''}.mp4`;
 
-    let currentRoom = window.habitacionActual || 'habitacion_1';
-    let currentSection = window.seccionActual || 'seccion_1';
+    // Obtener habitación y sección de múltiples fuentes con fallbacks
+    let currentRoom = button.dataset.habitacion || 
+                     window.habitacionActual || 
+                     'habitacion_1';
+    
+    let currentSection = button.dataset.seccion || 
+                        window.seccionActual || 
+                        'seccion_1';
 
-    if (button.dataset.habitacion) currentRoom = button.dataset.habitacion;
-    if (button.dataset.seccion) currentSection = button.dataset.seccion;
-
-    console.log(`🎬 Reproduciendo: ${audioName} en ${currentRoom}/${currentSection}`);
+    console.log(`🎬 Reproduciendo: ${audioName} en ${currentRoom}/${currentSection} (index:${index}, step:${step})`);
 
     const loader = document.getElementById("avatar-loader");
     const avatar = document.getElementById("avatar");
@@ -249,7 +255,7 @@ async function reproducirAudioConCache(button) {
     if (loader) loader.classList.remove("hidden");
 
     try {
-        // 🎥 OBTENER BLOB URL (NO REDESCARGA)
+        // 🎥 OBTENER BLOB URL
         const blobURL = await trueCachePreloader.getVideo(
             currentRoom,
             currentSection,
@@ -259,7 +265,7 @@ async function reproducirAudioConCache(button) {
         if (blobURL && video) {
             console.log(`✅ Usando blob URL para: ${audioName}`);
             
-            // CRÍTICO: Usar blob URL evita redescarga
+            // Evitar recargas innecesarias
             const currentSrc = video.src;
             
             if (currentSrc !== blobURL) {
@@ -272,10 +278,18 @@ async function reproducirAudioConCache(button) {
             // Reproducción con manejo robusto
             const playPromise = new Promise((resolve, reject) => {
                 let resolved = false;
+                const timeout = 5000;
+
+                const cleanup = () => {
+                    video.removeEventListener('canplay', handleCanPlay);
+                    video.removeEventListener('error', handleError);
+                };
 
                 const handleCanPlay = () => {
                     if (!resolved) {
                         resolved = true;
+                        cleanup();
+                        
                         if (loader) loader.classList.add("hidden");
                         if (avatar) avatar.classList.add("hidden");
                         video.classList.add("playing");
@@ -292,6 +306,7 @@ async function reproducirAudioConCache(button) {
                 const handleError = (error) => {
                     if (!resolved) {
                         resolved = true;
+                        cleanup();
                         reject(error);
                     }
                 };
@@ -301,11 +316,14 @@ async function reproducirAudioConCache(button) {
 
                 setTimeout(() => {
                     if (!resolved) {
-                        handleError(new Error('Timeout'));
+                        resolved = true;
+                        cleanup();
+                        handleError(new Error(`Timeout after ${timeout}ms`));
                     }
-                }, 5000);
+                }, timeout);
             });
 
+            // Configurar evento de finalización
             video.onended = () => {
                 video.classList.remove("playing");
                 if (avatar) avatar.classList.remove("hidden");
@@ -314,7 +332,7 @@ async function reproducirAudioConCache(button) {
             await playPromise;
 
         } else {
-            throw new Error('Video blob no disponible');
+            throw new Error(`Video blob no disponible para: ${audioName}`);
         }
 
     } catch (error) {
@@ -325,7 +343,7 @@ async function reproducirAudioConCache(button) {
         if (video) video.classList.remove("playing");
     }
 
-    // 📄 CARGAR SUBTÍTULOS
+    // 📄 CARGAR SUBTÍTULOS CORRESPONDIENTES
     const ruta = `habitaciones/${currentRoom}/${currentSection}`;
     const textoURL = `${ruta}/textos/${audioName.replace('.mp4', '.txt')}`;
     
@@ -334,10 +352,16 @@ async function reproducirAudioConCache(button) {
         .then(texto => {
             const dialogueBox = document.getElementById("dialogue-box");
             if (dialogueBox && typeof escribirTextoGradualmente === 'function') {
-                escribirTextoGradualmente(texto || "", dialogueBox, 60);
+                escribirTextoGradualmente(texto || "Texto no disponible", dialogueBox, 60);
             }
         })
-        .catch(err => console.warn("No texto disponible:", err));
+        .catch(err => {
+            console.warn(`No se pudo cargar texto para: ${audioName}`, err);
+            const dialogueBox = document.getElementById("dialogue-box");
+            if (dialogueBox && typeof escribirTextoGradualmente === 'function') {
+                escribirTextoGradualmente("", dialogueBox, 60);
+            }
+        });
 }
 
 // 🔗 NAVEGACIÓN
@@ -367,3 +391,4 @@ window.reproducirAudio = reproducirAudioConCache;
 window.videoPreloader = trueCachePreloader;
 
 console.log('🚀 Sistema TRUE CACHE inicializado - Videos no se redescargan');
+
