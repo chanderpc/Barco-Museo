@@ -19,8 +19,15 @@ let respuestasCorrectas = 0;
 let botonesSecciones = [];
 let bloqueActual = 0;
 let yaComenzo = false;
+let navigationCooldown = false;
+const NAVIGATION_DELAY = 2000; // 800ms entre cambios
 const botonesPorBloque = 4;
 const sonidoAnimacion = document.getElementById("audio-animacion");
+
+function convertirAWebp(nombreImagen) {
+  return nombreImagen.replace(/\.(jpg|jpeg|png|gif)$/i, '.webp');
+}
+cargarSeccionMinima()
 const avatares = {
   Andrea: {
     nombre: "Andrea",
@@ -552,7 +559,6 @@ async function irAHabitacion(habitacionID, seccionID) {
 async function cambiarSeccion(seccionID) {
   seccionActual = seccionID;
   
-  // 🔥 USAR EL SISTEMA OPTIMIZADO - CORREGIDO
   if (window.navigateToSection) {
     window.navigateToSection(habitacionActual, seccionID);
   }
@@ -577,13 +583,7 @@ async function cambiarSeccion(seccionID) {
           <div class="titulo-caja">${data.titulos?.[i] || `Obra ${i + 1}`}</div>
           <div class="subtitulo-caja">${data.subtitulos?.[i] || ""}</div>
           <div class="imagen-caja" data-index="${i}" data-step="0">
-            <button
-              class="btn-audio"
-              onclick="reproducirAudio(this)"
-              data-habitacion="${habitacionActual}"
-              data-seccion="${seccionActual}"
-              data-audio="video${i + 1}"
-            >⟲</button>
+            <button class="btn-audio" onclick="reproducirAudio(this)" data-habitacion="${habitacionActual}" data-seccion="${seccionActual}" data-audio="video${i + 1}">⟲</button>
             <button class="btn-subimg" onclick="cambiarSubimagen(this)">▶</button>
             <button class="btn-retroceso" onclick="retrocederSubimagen(this)">◀</button>
             <img alt="Obra">
@@ -592,11 +592,12 @@ async function cambiarSeccion(seccionID) {
 
         galeriaSlider.appendChild(item);
 
-        // Cargar imagen
+        // CAMBIO: Usar conversión a WebP
         const imagenElement = item.querySelector("img");
         if (imagenElement && imagenesPorCaja[key]?.[0]) {
-          const imagenSrc = `${getRutaBase()}/${imagenesPorCaja[key][0]}`;
-          imagenElement.src = imagenSrc;
+          let imagenSrc = imagenesPorCaja[key][0];
+          imagenSrc = convertirAWebp(imagenSrc);
+          imagenElement.src = `${getRutaBase()}/${imagenSrc}`;
         }
       });
 
@@ -604,10 +605,8 @@ async function cambiarSeccion(seccionID) {
       marcarBotonActivo(seccionID);
       inicializarImagenes();
       
-      // CORREGIDO: Solo reproducir si ya comenzó oficialmente
       const botonAudio = document.querySelector('.imagen-caja .btn-audio');
       if (!isWelcomePlaying && yaComenzo && botonAudio) {
-        // Pequeño delay para evitar reproducción muy rápida
         setTimeout(() => {
           reproducirAudio(botonAudio);
         }, 500);
@@ -632,7 +631,13 @@ function inicializarImagenes() {
 
     contenedor.dataset.step = 0;
     const lista = imagenesPorCaja[index] || [];
-    img.src = `${ruta}/imagenes/${lista[0].replace(/^.*\//, '')}`; // elimina el "seccion_x/" interno si viene
+    
+    // CAMBIO: Convertir a .webp
+    let nombreImagen = lista[0].replace(/^.*\//, '');
+    nombreImagen = convertirAWebp(nombreImagen);
+    
+    img.src = `${ruta}/imagenes/${nombreImagen}`;
+    
     const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
     const subtitulo = subtitulosPorCaja[index]?.[0] || "";
     if (subtituloCaja) subtituloCaja.textContent = subtitulo;
@@ -679,8 +684,17 @@ function playClickSound() {
   }
 }
 
-/* cambio de sub imagenes ====================================*/
 function cambiarSubimagen(button) {
+  if (navigationCooldown) {
+    console.log("🚫 Navegación muy rápida, esperando...");
+    return;
+  }
+  
+  navigationCooldown = true;
+  setTimeout(() => {
+    navigationCooldown = false;
+  }, NAVIGATION_DELAY);
+
   const contenedor = button.closest('.imagen-caja');
   const index = parseInt(contenedor.dataset.index);
   let step = parseInt(contenedor.dataset.step);
@@ -693,10 +707,18 @@ function cambiarSubimagen(button) {
 
   if (step < lista.length - 1) {
     step++;
-
     contenedor.dataset.step = step;
 
-    // Mostrar loader visual
+    retro.disabled = true;
+    avanzar.disabled = true;
+
+    const botonAudio = contenedor.querySelector('.btn-audio');
+    if (botonAudio) {
+      botonAudio.dataset.habitacion = habitacionActual;
+      botonAudio.dataset.seccion = seccionActual;
+      botonAudio.dataset.audio = `video${index + 1}${step > 0 ? `_sub${step}` : ''}`;
+    }
+
     const overlay = document.createElement("div");
     overlay.className = "loader-overlay";
     const spinner = document.createElement("div");
@@ -704,46 +726,62 @@ function cambiarSubimagen(button) {
     overlay.appendChild(spinner);
     contenedor.appendChild(overlay);
 
-    // Animación de salida
     img.classList.add("slide-out-left");
-
-    // ⚡ Imagen y audio al mismo tiempo
-    const nuevaRuta = `${getRutaBase()}/imagenes/${lista[step].replace(/^.*\//, '')}`;
+    
+    // CAMBIO: Convertir a .webp
+    let nombreImagen = lista[step].replace(/^.*\//, '');
+    nombreImagen = convertirAWebp(nombreImagen);
+    
+    const nuevaRuta = `${getRutaBase()}/imagenes/${nombreImagen}`;
     img.src = nuevaRuta;
     
-    // 🔥 ACTUALIZAR DATA ATTRIBUTES ANTES DE REPRODUCIR
-    const botonAudio = contenedor.querySelector('.btn-audio');
-    if (botonAudio) {
-      botonAudio.dataset.habitacion = habitacionActual;
-      botonAudio.dataset.seccion = seccionActual;
+    img.onload = () => {
+      contenedor.removeChild(overlay);
       
-      // IMPORTANTE: Reproducir después de que la imagen se haya cargado
-      img.onload = () => {
-        contenedor.removeChild(overlay);
+      const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
+      const subtitulo = subtitulosPorCaja[index]?.[step] || "";
+      if (subtituloCaja) subtituloCaja.textContent = subtitulo;
 
-        // Actualiza subtítulo
-        const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
-        const subtitulo = subtitulosPorCaja[index]?.[step] || "";
-        if (subtituloCaja) subtituloCaja.textContent = subtitulo;
+      img.classList.remove("slide-out-left");
+      img.classList.add("slide-in-right");
+      setTimeout(() => img.classList.remove("slide-in-right"), 400);
 
-        // Animación de entrada
-        img.classList.remove("slide-out-left");
-        img.classList.add("slide-in-right");
-        setTimeout(() => img.classList.remove("slide-in-right"), 400);
-
-        // Mostrar u ocultar flechas según paso
-        retro.style.display = step > 0 ? "block" : "none";
-        avanzar.style.display = step >= lista.length - 1 ? "none" : "block";
-        
-        // Reproducir audio DESPUÉS de que todo esté listo
+      retro.style.display = step > 0 ? "block" : "none";
+      avanzar.style.display = step >= lista.length - 1 ? "none" : "block";
+      
+      retro.disabled = false;
+      avanzar.disabled = false;
+      
+      setTimeout(() => {
         reproducirAudio(botonAudio);
-      };
-    }
+      }, 500);
+    };
+
+    img.onerror = () => {
+      console.error(`Error cargando imagen: ${nuevaRuta}`);
+      if (overlay && overlay.parentNode) {
+        contenedor.removeChild(overlay);
+      }
+      retro.disabled = false;
+      avanzar.disabled = false;
+      setTimeout(() => {
+        reproducirAudio(botonAudio);
+      }, 500);
+    };
   }
 }
 
-
 function retrocederSubimagen(button) {
+  if (navigationCooldown) {
+    console.log("🚫 Navegación muy rápida, esperando...");
+    return;
+  }
+  
+  navigationCooldown = true;
+  setTimeout(() => {
+    navigationCooldown = false;
+  }, NAVIGATION_DELAY);
+
   const contenedor = button.closest('.imagen-caja');
   const index = parseInt(contenedor.dataset.index);
   let step = parseInt(contenedor.dataset.step);
@@ -756,8 +794,18 @@ function retrocederSubimagen(button) {
 
   if (step > 0) {
     step--;
+    contenedor.dataset.step = step;
 
-    // Mostrar loader
+    retro.disabled = true;
+    avanzar.disabled = true;
+
+    const botonAudio = contenedor.querySelector('.btn-audio');
+    if (botonAudio) {
+      botonAudio.dataset.habitacion = habitacionActual;
+      botonAudio.dataset.seccion = seccionActual;
+      botonAudio.dataset.audio = `video${index + 1}${step > 0 ? `_sub${step}` : ''}`;
+    }
+
     const overlay = document.createElement("div");
     overlay.className = "loader-overlay";
     const spinner = document.createElement("div");
@@ -765,10 +813,18 @@ function retrocederSubimagen(button) {
     overlay.appendChild(spinner);
     contenedor.appendChild(overlay);
 
+    img.classList.add("slide-out-right");
+    
+    // CAMBIO: Convertir a .webp
+    let nombreImagen = lista[step].replace(/^.*\//, '');
+    nombreImagen = convertirAWebp(nombreImagen);
+    
+    const nuevaRuta = `${getRutaBase()}/imagenes/${nombreImagen}`;
+    img.src = nuevaRuta;
+    
     img.onload = () => {
       contenedor.removeChild(overlay);
-      contenedor.dataset.step = step;
-
+      
       const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
       const subtitulo = subtitulosPorCaja[index]?.[step] || "";
       if (subtituloCaja) subtituloCaja.textContent = subtitulo;
@@ -776,23 +832,29 @@ function retrocederSubimagen(button) {
       retro.style.display = step > 0 ? "block" : "none";
       avanzar.style.display = step >= lista.length - 1 ? "none" : "block";
 
-      // Mostrar con transición de entrada
       img.classList.remove("slide-out-right");
       img.classList.add("slide-in-left");
       setTimeout(() => img.classList.remove("slide-in-left"), 400);
 
-      // 🔥 ACTUALIZAR DATA ATTRIBUTES ANTES DE REPRODUCIR
-      const botonAudio = contenedor.querySelector('.btn-audio');
-      if (botonAudio) {
-        botonAudio.dataset.habitacion = habitacionActual;
-        botonAudio.dataset.seccion = seccionActual;
-        
-        // Reproducir audio
+      retro.disabled = false;
+      avanzar.disabled = false;
+
+      setTimeout(() => {
         reproducirAudio(botonAudio);
-      }
+      }, 500);
     };
-    
-    img.src = `${getRutaBase()}/imagenes/${lista[step].replace(/^.*\//, '')}`;
+
+    img.onerror = () => {
+      console.error(`Error cargando imagen: ${nuevaRuta}`);
+      if (overlay && overlay.parentNode) {
+        contenedor.removeChild(overlay);
+      }
+      retro.disabled = false;
+      avanzar.disabled = false;
+      setTimeout(() => {
+        reproducirAudio(botonAudio);
+      }, 500);
+    };
   }
 }
 
@@ -863,9 +925,8 @@ async function cargarSeccionMinima() {
   habitacionActual = 'habitacion_1';
   seccionActual = 'seccion_1';
 
-  const ruta = getRutaBase(); // = habitaciones/habitacion_1/seccion_1
+  const ruta = getRutaBase();
 
-  // Cargar el JSON con la galería
   const res = await fetch(`${ruta}/data.json`);
   const data = await res.json();
 
@@ -876,7 +937,6 @@ async function cargarSeccionMinima() {
   galeriaSlider.innerHTML = "";
   marcarBotonActivo('seccion_1');
 
-  // Crear solo el primer .item-galeria (index 0)
   const key = Object.keys(imagenesPorCaja)[0];
   const lista = imagenesPorCaja[key];
 
@@ -897,21 +957,22 @@ async function cargarSeccionMinima() {
 
   galeriaSlider.appendChild(item);
 
-  // Inicializar imagen
   const contenedor = item.querySelector('.imagen-caja');
   const img = contenedor.querySelector('img');
   const step = 0;
-  const nombreImagen = lista[step].replace(/^.*\//, '');
+  
+  // CAMBIO: Convertir a WebP
+  let nombreImagen = lista[step].replace(/^.*\//, '');
+  nombreImagen = convertirAWebp(nombreImagen);
   img.src = `${ruta}/imagenes/${nombreImagen}`;
 
-  // Esperar a que cargue completamente
   await new Promise((resolve) => {
     if (img.complete) {
       resolve();
     } else {
       img.onload = () => resolve();
       img.onerror = () => {
-        console.warn("❌ No se pudo cargar la imagen inicial");
+        console.warn("⚠ No se pudo cargar la imagen inicial");
         resolve();
       };
     }
