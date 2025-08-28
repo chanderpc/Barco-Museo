@@ -1614,15 +1614,28 @@ function salirPantallaCompleta() {
 }// PARCHE ESPECÍFICO PARA HABITACIÓN 6 - Añadir al final de script.js
 
 // Modificar la función irAHabitacion para detectar habitación 6
-const irAHabitacionOriginal = window.irAHabitacion;
+const irAHabitacionOriginal = window.irAHabitacion || irAHabitacion;
 window.irAHabitacion = async function(habitacionID, seccionID) {
-  // Si es habitación 6, detener video y mostrar avatar
-  if (habitacionID === 'habitacion_6') {
+  console.log(`Navegando a: ${habitacionID}`);
+  
+  // Detener video completamente antes de cambiar de habitación
+  detenerVideoCompletamente();
+  
+  // Habitaciones sin video (5 y 6)
+  const habitacionesSinVideo = ['habitacion_5', 'habitacion_6'];
+  
+  if (habitacionesSinVideo.includes(habitacionID)) {
+    console.log(`Habitación sin video detectada: ${habitacionID}`);
+    
+    // Asegurar que el video esté completamente detenido
     const video = document.getElementById("aiko-video");
     const avatar = document.getElementById("avatar");
     
     if (video) {
       video.pause();
+      video.currentTime = 0;
+      video.src = "";
+      video.load();
       video.classList.remove("playing");
     }
     
@@ -1631,7 +1644,7 @@ window.irAHabitacion = async function(habitacionID, seccionID) {
     }
   }
   
-  // Ejecutar función original
+  // Ejecutar la función original
   return await irAHabitacionOriginal.call(this, habitacionID, seccionID);
 };
 
@@ -1713,41 +1726,33 @@ async function loadSubtitlesHabitacion6(roomId) {
 }
 
 // Modificar la función cambiarSeccion para habitación 6
-const cambiarSeccionOriginal = window.cambiarSeccion;
+const cambiarSeccionOriginal = window.cambiarSeccion || cambiarSeccion;
 window.cambiarSeccion = async function(seccionID) {
-  const currentRoom = window.habitacionActual;
+  const habitacionActual = window.habitacionActual;
+  const habitacionesSinVideo = ['habitacion_5', 'habitacion_6'];
   
-  // Si estamos en habitación 6, configurar específicamente
-  if (currentRoom === 'habitacion_6') {
-    window.seccionActual = seccionID;
-    
-    // Detener video y mostrar avatar
-    const video = document.getElementById("aiko-video");
-    const avatar = document.getElementById("avatar");
-    
-    if (video) {
-      video.pause();
-      video.classList.remove("playing");
-    }
-    
-    if (avatar) {
-      avatar.classList.remove("hidden");
-    }
-    
-    // Auto-reproducir texto al cambiar sección en habitación 6
-    setTimeout(() => {
-      const botonAudio = document.querySelector('.imagen-caja .btn-audio');
-      if (botonAudio) {
-        window.reproducirAudio(botonAudio);
-      }
-    }, 500);
-    
-    return;
+  if (habitacionesSinVideo.includes(habitacionActual)) {
+    console.log(`Sección sin video: ${habitacionActual}/${seccionID}`);
+    detenerVideoCompletamente();
   }
   
-  // Para otras habitaciones, usar función original
   return await cambiarSeccionOriginal.call(this, seccionID);
 };
+function limpiarRecursosVideo() {
+  // Detener video principal
+  detenerVideoCompletamente();
+  
+  // Limpiar URLs de blob que puedan estar en memoria
+  const video = document.getElementById("aiko-video");
+  if (video && video.src && video.src.startsWith('blob:')) {
+    URL.revokeObjectURL(video.src);
+  }
+  
+  // Cancelar descargas en curso si existe el sistema de video optimizado
+  if (window.optimizedPreloader && window.optimizedPreloader.downloadController) {
+    window.optimizedPreloader.downloadController.currentVideoRequest = null;
+  }
+}
 
 console.log("🏠 Parche para habitación 6 aplicado - Solo texto y avatar");
 // Variable global para controlar la reproducción actual
@@ -2476,4 +2481,39 @@ document.addEventListener("DOMContentLoaded", () => {
 // También ejecutar inmediatamente por si el DOM ya está cargado
 ocultarPantallaCompletaEnIOS();
 
+function detenerVideoCompletamente() {
+  const video = document.getElementById("aiko-video");
+  const avatar = document.getElementById("avatar");
+  const loader = document.getElementById("avatar-loader");
+
+  if (video) {
+    // Pausar el video
+    video.pause();
+    // Resetear el tiempo
+    video.currentTime = 0;
+    // Limpiar la fuente para detener completamente la reproducción
+    video.src = "";
+    // Forzar descarga del video
+    video.load();
+    // Remover clase de reproducción
+    video.classList.remove("playing");
+  }
+
+  // Mostrar avatar
+  if (avatar) {
+    avatar.classList.remove("hidden");
+  }
+
+  // Ocultar loader
+  if (loader) {
+    loader.classList.add("hidden");
+  }
+
+  // Cancelar cualquier petición de video en curso
+  if (window.currentVideoRequest) {
+    window.currentVideoRequest = null;
+  }
+
+  console.log("Video detenido completamente");
+}
 console.log('⚡ Controlador de descargas únicas inicializado - Sin duplicados');
