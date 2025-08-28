@@ -2005,3 +2005,366 @@ setInterval(() => {
 }, 60000); // Cada minuto
 
 console.log('⚡ Optimizaciones adicionales de script.js aplicadas');
+
+// CONTROLADOR DE DESCARGAS ÚNICAS - Evita duplicados
+class VideoDownloadController {
+    constructor() {
+        this.downloadPromises = new Map(); // Promesas de descarga en curso
+        this.completedDownloads = new Map(); // Descargas completadas
+        this.maxConcurrentDownloads = 2; // Máximo 2 descargas simultáneas
+        this.currentDownloads = 0;
+        this.downloadQueue = []; // Cola de espera
+    }
+
+    // MÉTODO PRINCIPAL: Obtener video con control de duplicados
+    async getVideoSingle(roomId, sectionId, videoName) {
+        const videoKey = this.generateKey(roomId, sectionId, videoName);
+        
+        // 1. Si ya está completado, devolver inmediatamente
+        if (this.completedDownloads.has(videoKey)) {
+            console.log(`✅ Video desde cache: ${videoName}`);
+            return this.completedDownloads.get(videoKey);
+        }
+
+        // 2. Si ya está descargándose, esperar a esa promesa
+        if (this.downloadPromises.has(videoKey)) {
+            console.log(`⏳ Esperando descarga en curso: ${videoName}`);
+            return await this.downloadPromises.get(videoKey);
+        }
+
+        // 3. Iniciar nueva descarga controlada
+        const downloadPromise = this.executeDownload(roomId, sectionId, videoName, videoKey);
+        this.downloadPromises.set(videoKey, downloadPromise);
+
+        try {
+            const result = await downloadPromise;
+            
+            // Mover a completados
+            this.completedDownloads.set(videoKey, result);
+            this.downloadPromises.delete(videoKey);
+            
+            return result;
+        } catch (error) {
+            // Limpiar en caso de error
+            this.downloadPromises.delete(videoKey);
+            throw error;
+        }
+    }
+
+    // EJECUTAR DESCARGA CON CONTROL DE CONCURRENCIA
+    async executeDownload(roomId, sectionId, videoName, videoKey) {
+        // Control de concurrencia
+        if (this.currentDownloads >= this.maxConcurrentDownloads) {
+            console.log(`🚦 Cola de descarga: ${videoName}`);
+            await this.waitInQueue(videoKey);
+        }
+
+        this.currentDownloads++;
+        console.log(`⬇️ Iniciando descarga: ${videoName} (${this.currentDownloads}/${this.maxConcurrentDownloads})`);
+
+        try {
+            const result = await this.downloadVideo(roomId, sectionId, videoName);
+            return result;
+        } finally {
+            this.currentDownloads--;
+            this.processQueue(); // Procesar siguiente en cola
+        }
+    }
+
+    // DESCARGA REAL DEL VIDEO
+    async downloadVideo(roomId, sectionId, videoName) {
+        const guide = this.getCurrentGuide();
+        const videoURL = `habitaciones/${roomId}/${sectionId}/videos/${guide}/${videoName}`;
+        
+        // Verificar existencia primero
+        const headResponse = await fetch(videoURL, { method: 'HEAD', cache: 'no-cache' });
+        if (!headResponse.ok) {
+            console.warn(`❌ Video no existe: ${videoName}`);
+            return null;
+        }
+
+        // Descargar blob
+        const response = await fetch(videoURL);
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+
+        const blob = await response.blob();
+        const blobURL = URL.createObjectURL(blob);
+        
+        console.log(`✅ Video descargado: ${videoName} (${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
+        return blobURL;
+    }
+
+    // SISTEMA DE COLA
+    waitInQueue(videoKey) {
+        return new Promise(resolve => {
+            this.downloadQueue.push({ videoKey, resolve });
+        });
+    }
+
+    processQueue() {
+        if (this.downloadQueue.length > 0 && this.currentDownloads < this.maxConcurrentDownloads) {
+            const { resolve } = this.downloadQueue.shift();
+            resolve();
+        }
+    }
+
+    // UTILIDADES
+    generateKey(roomId, sectionId, videoName) {
+        const guide = this.getCurrentGuide();
+        return `${roomId}/${sectionId}/${guide}/${videoName}`;
+    }
+
+    getCurrentGuide() {
+        if (window.avatarSeleccionado && window.avatares) {
+            const guideMapping = {
+                'Andrea': 'andrea_irl',
+                'Andrea_anime': 'andrea',
+                'Carlos_IRL': 'carlos_irl', 
+                'Carlos': 'carlos',
+                'bryan': 'Bryan',
+                'maria': 'Maria'
+            };
+            return guideMapping[window.avatarSeleccionado] || 'andrea';
+        }
+        return 'andrea';
+    }
+
+    // LIMPIAR CACHE
+    clearCache() {
+        // Revocar blob URLs
+        this.completedDownloads.forEach(blobURL => {
+            if (blobURL) URL.revokeObjectURL(blobURL);
+        });
+        
+        this.completedDownloads.clear();
+        this.downloadPromises.clear();
+        this.downloadQueue = [];
+    }
+
+    // ESTADÍSTICAS
+    getStats() {
+        return {
+            completed: this.completedDownloads.size,
+            downloading: this.downloadPromises.size,
+            queued: this.downloadQueue.length,
+            concurrent: this.currentDownloads
+        };
+    }
+}
+
+// PRELOADER OPTIMIZADO CON CONTROL DE DUPLICADOS
+class OptimizedVideoPreloader {
+    constructor() {
+        this.downloadController = new VideoDownloadController();
+        this.isEnabled = true;
+    }
+
+    // MÉTODO PRINCIPAL QUE REEMPLAZA TODOS LOS ANTERIORES
+    async getVideo(roomId, sectionId, videoName) {
+        if (!this.isEnabled) return null;
+        
+        return await this.downloadController.getVideoSingle(roomId, sectionId, videoName);
+    }
+
+    // PRECARGA INTELIGENTE SIN DUPLICADOS
+    async preloadSection(roomId, sectionId) {
+        if (!this.isEnabled) return;
+        
+        console.log(`🚀 Precarga optimizada: ${roomId}/${sectionId}`);
+        
+        // Lista de videos posibles para esta sección
+        const possibleVideos = [
+            'video1.mp4',
+            'video1_sub1.mp4',
+            'video1_sub2.mp4',
+            'video1_sub3.mp4'
+        ];
+
+        // Precargar en secuencia controlada
+        for (const videoName of possibleVideos) {
+            try {
+                const result = await this.getVideo(roomId, sectionId, videoName);
+                if (!result) break; // Si no existe, parar
+            } catch (error) {
+                console.warn(`Falló precarga de ${videoName}:`, error);
+                break;
+            }
+            
+            // Pausa entre precargas
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+    }
+
+    // CAMBIAR GUÍA
+    changeGuide(newGuide) {
+        console.log(`👤 Cambiando guía, limpiando cache...`);
+        this.downloadController.clearCache();
+    }
+
+    // ESTADÍSTICAS
+    getStats() {
+        return this.downloadController.getStats();
+    }
+}
+
+// FUNCIÓN DE REPRODUCCIÓN OPTIMIZADA
+async function reproducirVideoOptimizado(button) {
+    if (button?.disabled) return;
+    
+    // Deshabilitar temporalmente
+    if (button) {
+        button.disabled = true;
+        setTimeout(() => button.disabled = false, 1000);
+    }
+
+    // Sonido de click
+    if (typeof playClickSound === 'function') {
+        playClickSound();
+    }
+
+    const contenedor = button?.closest('.imagen-caja');
+    if (!contenedor) return;
+
+    const index = parseInt(contenedor.dataset.index) || 0;
+    const step = parseInt(contenedor.dataset.step) || 0;
+    const audioName = `video${index + 1}${step > 0 ? `_sub${step}` : ''}.mp4`;
+
+    const currentRoom = button?.dataset?.habitacion || window.habitacionActual || 'habitacion_1';
+    const currentSection = button?.dataset?.seccion || window.seccionActual || 'seccion_1';
+
+    console.log(`🎬 Reproduciendo: ${audioName} en ${currentRoom}/${currentSection}`);
+
+    // UI: Mostrar loading
+    const loader = document.getElementById("avatar-loader");
+    const avatar = document.getElementById("avatar");
+    const video = document.getElementById("aiko-video");
+
+    if (avatar) avatar.classList.add("hidden");
+    if (video) video.classList.remove("playing");
+    if (loader) loader.classList.remove("hidden");
+
+    try {
+        // Obtener video SIN DUPLICADOS
+        const blobURL = await optimizedPreloader.getVideo(currentRoom, currentSection, audioName);
+
+        if (blobURL && video) {
+            console.log(`▶️ Configurando video: ${audioName}`);
+            
+            // Solo cambiar src si es diferente
+            if (video.src !== blobURL) {
+                video.src = blobURL;
+                video.load();
+            }
+            
+            video.currentTime = 0;
+
+            // Reproducir con timeout
+            await new Promise((resolve, reject) => {
+                let resolved = false;
+                
+                const cleanup = () => {
+                    video.removeEventListener('canplay', onCanPlay);
+                    video.removeEventListener('error', onError);
+                };
+
+                const onCanPlay = () => {
+                    if (resolved) return;
+                    resolved = true;
+                    cleanup();
+                    
+                    // Ocultar loader y mostrar video
+                    if (loader) loader.classList.add("hidden");
+                    video.classList.add("playing");
+                    
+                    video.play().then(resolve).catch(reject);
+                };
+
+                const onError = (error) => {
+                    if (resolved) return;
+                    resolved = true;
+                    cleanup();
+                    reject(error);
+                };
+
+                video.addEventListener('canplay', onCanPlay, { once: true });
+                video.addEventListener('error', onError, { once: true });
+
+                // Timeout de 3 segundos
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        cleanup();
+                        reject(new Error('Video timeout'));
+                    }
+                }, 3000);
+            });
+
+            // Configurar evento de finalización
+            video.onended = () => {
+                video.classList.remove("playing");
+                if (avatar) avatar.classList.remove("hidden");
+            };
+
+        } else {
+            throw new Error(`Video no disponible: ${audioName}`);
+        }
+
+    } catch (error) {
+        console.warn(`⚠️ Error reproduciendo ${audioName}:`, error);
+        
+        // Mostrar solo avatar
+        if (loader) loader.classList.add("hidden");
+        if (avatar) avatar.classList.remove("hidden");
+        if (video) video.classList.remove("playing");
+    }
+
+    // Cargar subtítulos
+    await loadSubtitles(currentRoom, currentSection, audioName);
+}
+
+// CARGAR SUBTÍTULOS
+async function loadSubtitles(roomId, sectionId, audioName) {
+    try {
+        const textURL = `habitaciones/${roomId}/${sectionId}/textos/${audioName.replace('.mp4', '.txt')}`;
+        const response = await fetch(textURL);
+        const texto = response.ok ? await response.text() : "";
+        
+        const dialogueBox = document.getElementById("dialogue-box");
+        if (dialogueBox && typeof escribirTextoGradualmente === 'function') {
+            escribirTextoGradualmente(texto || "Información no disponible", dialogueBox, 60);
+        }
+    } catch (error) {
+        console.warn(`No se pudo cargar texto para: ${audioName}`);
+    }
+}
+
+// INSTANCIA GLOBAL
+const optimizedPreloader = new OptimizedVideoPreloader();
+
+// REEMPLAZAR FUNCIÓN GLOBAL
+window.reproducirAudio = reproducirVideoOptimizado;
+window.optimizedVideoPreloader = optimizedPreloader;
+
+// NAVEGACIÓN OPTIMIZADA
+window.navigateToSection = function(roomId, sectionId) {
+    // Precarga con delay para evitar sobrecargar
+    setTimeout(() => {
+        optimizedPreloader.preloadSection(roomId, sectionId);
+    }, 1000);
+};
+
+window.changeGuide = function(guideName) {
+    optimizedPreloader.changeGuide(guideName);
+};
+
+// COMANDOS DE DEBUG
+window.showOptimizedStats = function() {
+    console.log('📊 Stats optimizadas:', optimizedPreloader.getStats());
+};
+
+window.clearVideoCache = function() {
+    optimizedPreloader.downloadController.clearCache();
+    console.log('🧹 Cache limpiado');
+};
+
+console.log('⚡ Controlador de descargas únicas inicializado - Sin duplicados');
