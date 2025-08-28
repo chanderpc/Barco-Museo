@@ -1940,3 +1940,68 @@ function showAvatarOnly() {
         video.pause();
     }
 }
+// AÑADIR ESTAS OPTIMIZACIONES AL FINAL DE script.js
+
+// 1. CONTROL DE COOLDOWNS MÁS AGRESIVO
+let globalCooldown = false;
+
+// 2. OPTIMIZAR cambiarSubimagen para evitar cargas innecesarias
+const cambiarSubImagenOriginal = window.cambiarSubimagen;
+window.cambiarSubimagen = function(button) {
+    if (globalCooldown) return;
+    
+    globalCooldown = true;
+    setTimeout(() => globalCooldown = false, 1000);
+    
+    return cambiarSubImagenOriginal.call(this, button);
+};
+
+// 3. OPTIMIZAR retrocederSubimagen
+const retrocederSubImagenOriginal = window.retrocederSubimagen;
+window.retrocederSubimagen = function(button) {
+    if (globalCooldown) return;
+    
+    globalCooldown = true;
+    setTimeout(() => globalCooldown = false, 1000);
+    
+    return retrocederSubImagenOriginal.call(this, button);
+};
+
+// 4. MEJORAR irAHabitacion para cancelar cargas previas
+const irAHabitacionOptimizado = window.irAHabitacion;
+window.irAHabitacion = async function(habitacionID, seccionID) {
+    // Cancelar cargas anteriores
+    if (window.videoManager) {
+        window.videoManager.cancelAllNonPriority();
+    }
+    
+    return await irAHabitacionOptimizado.call(this, habitacionID, seccionID);
+};
+
+// 5. OPTIMIZAR cambiarSeccion
+const cambiarSeccionOptimizado = window.cambiarSeccion;
+window.cambiarSeccion = async function(seccionID) {
+    if (globalCooldown) return;
+    
+    globalCooldown = true;
+    setTimeout(() => globalCooldown = false, 800);
+    
+    return await cambiarSeccionOptimizado.call(this, seccionID);
+};
+
+// 6. LIMPIAR CACHE AUTOMÁTICAMENTE
+setInterval(() => {
+    if (window.videoManager) {
+        const stats = window.videoManager.getStats();
+        if (stats.videosInCache > 10) { // Si hay más de 10 videos en cache
+            console.log('🧹 Limpieza automática de cache iniciada');
+            // Limpiar videos antiguos (implementación simplificada)
+            const cacheSize = stats.videosInCache;
+            if (cacheSize > 15) {
+                window.videoManager.clearCaches();
+            }
+        }
+    }
+}, 60000); // Cada minuto
+
+console.log('⚡ Optimizaciones adicionales de script.js aplicadas');
