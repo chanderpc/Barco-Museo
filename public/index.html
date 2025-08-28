@@ -12,7 +12,16 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+      <div id="sorpresa">
+        <button id="cerrar-sorpresa">X</button>
+        <p>App creada por:</p>
+        <ul>
+          <li>Michael Olguin Cañari</li>
+          <li>Cristhofer Perez Cruz</li>
+        </ul>
+      </div>
     <audio id="audio-animacion" src="sounds/zoom.mp3" preload="auto"></audio>
+
     <div id="pantalla-transicion"></div>
        <div class="audio-container">
        <!-- Botón con dos iconos -->
@@ -33,10 +42,10 @@
     
     <div id="fixed-header">
       APROFERROL S.A.
-      <button id="btn-configuracion" title="Configuración">⚙️</button>
+      <button id="btn-configuracion" title="Configuración"><i class="fa-solid fa-gear" style="color: #d3d3d3"></i></button>
       <div class="fullscreen-controls">
-      <button id="btn-fullscreen" onclick="activarPantallaCompleta()">⛶</button>
-      <button id="btn-exit-fullscreen" class="hidden" onclick="salirPantallaCompleta()">×</button>
+      <button id="btn-fullscreen" onclick="activarPantallaCompleta()"><i class="fa-solid fa-expand"></i></button>
+      <button id="btn-exit-fullscreen" class="hidden" onclick="salirPantallaCompleta()"><i class="fa-solid fa-compress"></i></button>
       </div>
     </div>
 
@@ -72,6 +81,7 @@
         <a href="https://www.instagram.com/aproferrol/" target="_blank"><i class="fab fa-instagram"></i></a>
         <a href="https://aproferrol.com/" target="_blank"><i class="fa-solid fa-earth-americas"></i></a>
         <a href=https://pe.linkedin.com/company/aproferrol target="_blank"><i class="fa-brands fa-linkedin"></i></a>
+        <a href=https://www.youtube.com/@aproferrol3116 target="_blank"><i class="fa-brands fa-youtube"></i></a>
       </div>
   </div>
 
@@ -219,7 +229,8 @@
     <button id="btn-toggle-tema" title="Cambiar tema">🌙</button>
     <button id="btn-toggle-sonido" title="Silenciar">🔊</button>
   </div>
-  <script src="js/optimized_preloader_fixed.js"></script>
+<script src="js/smart_video_detection.js"></script>
+<script src="js/video_structure_detector.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
