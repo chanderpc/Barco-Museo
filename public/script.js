@@ -1,5 +1,7 @@
 let isAudioPlaying = false;
 let activeAudios = [];
+let patronCorrecto = ["tema", "audio","audio", "audio", "tema", "audio", "audio"];  // 🔹 el patrón esperado
+let patronUsuario = [];
 let isWelcomePlaying = false;
 let welcomeAudio;
 let video;
@@ -19,11 +21,15 @@ let respuestasCorrectas = 0;
 let botonesSecciones = [];
 let bloqueActual = 0;
 let yaComenzo = false;
-let navigationCooldown = false;
-const NAVIGATION_DELAY = 2000; // 800ms entre cambios
+let sectionCooldown = false;
+let imageCooldown = false;
 const botonesPorBloque = 4;
 const sonidoAnimacion = document.getElementById("audio-animacion");
-
+const HABITACION_6_CONFIG = {
+    soloTexto: true,
+    cancelarVideos: true,
+    mostrarAvatar: true
+};
 function convertirAWebp(nombreImagen) {
   return nombreImagen.replace(/\.(jpg|jpeg|png|gif)$/i, '.webp');
 }
@@ -92,6 +98,26 @@ const seccionesPorHabitacion = {
   habitacion_5: 3,
   habitacion_6: 1,
 };
+
+function registrarBoton(id) {
+  patronUsuario.push(id);
+
+  // Mantener el array del mismo tamaño que el patrón
+  if (patronUsuario.length > patronCorrecto.length) {
+    patronUsuario.shift();
+  }
+
+  if (JSON.stringify(patronUsuario) === JSON.stringify(patronCorrecto)) {
+  const sorpresa = document.getElementById("sorpresa");
+  sorpresa.classList.add("mostrar");
+ }
+}
+document.getElementById("cerrar-sorpresa").addEventListener("click", () => {
+document.getElementById("sorpresa").classList.remove("mostrar");
+ // Conectar botones ya existentes
+});
+document.getElementById("btn-toggle-tema").addEventListener("click", () => registrarBoton("tema"));
+document.getElementById("btn-toggle-sonido").addEventListener("click", () => registrarBoton("audio"));
 function aplicarTemaPorHabitacion(habitacionID) {
   const body = document.body;
   // Elimina clases anteriores de tema
@@ -646,6 +672,10 @@ function inicializarImagenes() {
   });
 }
 function cambiarSoloSeccion(seccionID) {
+  if (sectionCooldown) return; // Bloquear si hay cooldown
+  
+  sectionCooldown = true;
+  
   const botones = document.querySelectorAll("#galeria-controles button");
   botones.forEach(btn => btn.classList.remove("active"));
 
@@ -654,11 +684,16 @@ function cambiarSoloSeccion(seccionID) {
 
   seccionActual = seccionID;
   cambiarSeccion(seccionID);
-   botonesSecciones.forEach(btn => {
+  
+  botonesSecciones.forEach(btn => {
     btn.classList.remove("active");
   });
+  
+  // Liberar cooldown después de 800ms
+  setTimeout(() => {
+    sectionCooldown = false;
+  }, 500);
 }
-
 function stopWelcomePlayback() {
   if (!isWelcomePlaying) return;
 
@@ -685,177 +720,218 @@ function playClickSound() {
 }
 
 function cambiarSubimagen(button) {
-  if (navigationCooldown) {
-    console.log("🚫 Navegación muy rápida, esperando...");
-    return;
-  }
+  if (imageCooldown) return; // Bloquear si hay cooldown
   
-  navigationCooldown = true;
-  setTimeout(() => {
-    navigationCooldown = false;
-  }, NAVIGATION_DELAY);
-
+  imageCooldown = true;
+  
   const contenedor = button.closest('.imagen-caja');
   const index = parseInt(contenedor.dataset.index);
   let step = parseInt(contenedor.dataset.step);
-  const img = contenedor.querySelector('img');
+  const lista = imagenesPorCaja[index];
+
+  // Verificar si hay mÃ¡s imÃ¡genes
+  if (step >= lista.length - 1) {
+    imageCooldown = false; // Liberar si no hay mÃ¡s imÃ¡genes
+    return;
+  }
+
+  // Deshabilitar temporalmente
   const retro = contenedor.querySelector('.btn-retroceso');
   const avanzar = contenedor.querySelector('.btn-subimg');
-  const lista = imagenesPorCaja[index];
+  retro.disabled = true;
+  avanzar.disabled = true;
 
   playClickSound();
 
-  if (step < lista.length - 1) {
-    step++;
-    contenedor.dataset.step = step;
+  // Incrementar paso
+  step++;
+  contenedor.dataset.step = step;
 
-    retro.disabled = true;
-    avanzar.disabled = true;
-
-    const botonAudio = contenedor.querySelector('.btn-audio');
-    if (botonAudio) {
-      botonAudio.dataset.habitacion = habitacionActual;
-      botonAudio.dataset.seccion = seccionActual;
-      botonAudio.dataset.audio = `video${index + 1}${step > 0 ? `_sub${step}` : ''}`;
-    }
-
-    const overlay = document.createElement("div");
-    overlay.className = "loader-overlay";
-    const spinner = document.createElement("div");
-    spinner.className = "loader-spinner";
-    overlay.appendChild(spinner);
-    contenedor.appendChild(overlay);
-
-    img.classList.add("slide-out-left");
-    
-    // CAMBIO: Convertir a .webp
-    let nombreImagen = lista[step].replace(/^.*\//, '');
-    nombreImagen = convertirAWebp(nombreImagen);
-    
-    const nuevaRuta = `${getRutaBase()}/imagenes/${nombreImagen}`;
-    img.src = nuevaRuta;
-    
-    img.onload = () => {
-      contenedor.removeChild(overlay);
-      
-      const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
-      const subtitulo = subtitulosPorCaja[index]?.[step] || "";
-      if (subtituloCaja) subtituloCaja.textContent = subtitulo;
-
-      img.classList.remove("slide-out-left");
-      img.classList.add("slide-in-right");
-      setTimeout(() => img.classList.remove("slide-in-right"), 400);
-
-      retro.style.display = step > 0 ? "block" : "none";
-      avanzar.style.display = step >= lista.length - 1 ? "none" : "block";
-      
-      retro.disabled = false;
-      avanzar.disabled = false;
-      
-      setTimeout(() => {
-        reproducirAudio(botonAudio);
-      }, 500);
-    };
-
-    img.onerror = () => {
-      console.error(`Error cargando imagen: ${nuevaRuta}`);
-      if (overlay && overlay.parentNode) {
-        contenedor.removeChild(overlay);
-      }
-      retro.disabled = false;
-      avanzar.disabled = false;
-      setTimeout(() => {
-        reproducirAudio(botonAudio);
-      }, 500);
-    };
+  // Actualizar botÃ³n de audio con nueva informaciÃ³n
+  const botonAudio = contenedor.querySelector('.btn-audio');
+  if (botonAudio) {
+    botonAudio.dataset.habitacion = habitacionActual;
+    botonAudio.dataset.seccion = seccionActual;
+    botonAudio.dataset.audio = `video${index + 1}${step > 0 ? `_sub${step}` : ''}`;
   }
+
+  // Crear overlay de carga
+  const overlay = document.createElement("div");
+  overlay.className = "loader-overlay";
+  const spinner = document.createElement("div");
+  spinner.className = "loader-spinner";
+  overlay.appendChild(spinner);
+  contenedor.appendChild(overlay);
+
+  // Cambiar imagen
+  const img = contenedor.querySelector('img');
+  img.classList.add("slide-out-left");
+  
+  // Convertir a WebP
+  let nombreImagen = lista[step].replace(/^.*\//, '');
+  nombreImagen = convertirAWebp(nombreImagen);
+  
+  const nuevaRuta = `${getRutaBase()}/imagenes/${nombreImagen}`;
+
+  // FunciÃ³n de limpieza mejorada
+  const cleanup = () => {
+    if (overlay && overlay.parentNode) {
+      contenedor.removeChild(overlay);
+    }
+    retro.disabled = false;
+    avanzar.disabled = false;
+    
+    // Liberar cooldown despuÃ©s de 600ms
+    setTimeout(() => {
+      imageCooldown = false;
+    }, 1500);
+  };
+
+  // Cargar nueva imagen
+  const tempImg = new Image();
+  tempImg.onload = () => {
+    img.src = tempImg.src;
+    cleanup();
+    
+    // Actualizar subtÃ­tulo
+    const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
+    const subtitulo = subtitulosPorCaja[index]?.[step] || "";
+    if (subtituloCaja) subtituloCaja.textContent = subtitulo;
+
+    // Animaciones
+    img.classList.remove("slide-out-left");
+    img.classList.add("slide-in-right");
+    setTimeout(() => img.classList.remove("slide-in-right"), 400);
+
+    // Actualizar visibilidad de botones
+    retro.style.display = step > 0 ? "block" : "none";
+    avanzar.style.display = step >= lista.length - 1 ? "none" : "block";
+    
+    // REPRODUCIR AUDIO INMEDIATAMENTE
+    if (botonAudio && window.reproducirAudio) {
+      window.reproducirAudio(botonAudio);
+    }
+  };
+
+  tempImg.onerror = () => {
+    console.error(`Error cargando imagen: ${nuevaRuta}`);
+    cleanup();
+    
+    // REPRODUCIR AUDIO AUNQUE FALLE LA IMAGEN
+    if (botonAudio && window.reproducirAudio) {
+      setTimeout(() => window.reproducirAudio(botonAudio), 200);
+    }
+  };
+
+  // Iniciar carga
+  tempImg.src = nuevaRuta;
 }
 
+// Modificar la funciÃ³n retrocederSubimagen existente
 function retrocederSubimagen(button) {
-  if (navigationCooldown) {
-    console.log("🚫 Navegación muy rápida, esperando...");
-    return;
-  }
+  if (imageCooldown) return; // Bloquear si hay cooldown
   
-  navigationCooldown = true;
-  setTimeout(() => {
-    navigationCooldown = false;
-  }, NAVIGATION_DELAY);
-
+  imageCooldown = true;
+  
   const contenedor = button.closest('.imagen-caja');
   const index = parseInt(contenedor.dataset.index);
   let step = parseInt(contenedor.dataset.step);
-  const img = contenedor.querySelector('img');
+  const lista = imagenesPorCaja[index];
+
+  // Verificar si se puede retroceder
+  if (step <= 0) {
+    imageCooldown = false; // Liberar si no se puede retroceder
+    return;
+  }
+
+  // Deshabilitar temporalmente
   const retro = contenedor.querySelector('.btn-retroceso');
   const avanzar = contenedor.querySelector('.btn-subimg');
-  const lista = imagenesPorCaja[index];
+  retro.disabled = true;
+  avanzar.disabled = true;
 
   playClickSound();
 
-  if (step > 0) {
-    step--;
-    contenedor.dataset.step = step;
+  // Decrementar paso
+  step--;
+  contenedor.dataset.step = step;
 
-    retro.disabled = true;
-    avanzar.disabled = true;
-
-    const botonAudio = contenedor.querySelector('.btn-audio');
-    if (botonAudio) {
-      botonAudio.dataset.habitacion = habitacionActual;
-      botonAudio.dataset.seccion = seccionActual;
-      botonAudio.dataset.audio = `video${index + 1}${step > 0 ? `_sub${step}` : ''}`;
-    }
-
-    const overlay = document.createElement("div");
-    overlay.className = "loader-overlay";
-    const spinner = document.createElement("div");
-    spinner.className = "loader-spinner";
-    overlay.appendChild(spinner);
-    contenedor.appendChild(overlay);
-
-    img.classList.add("slide-out-right");
-    
-    // CAMBIO: Convertir a .webp
-    let nombreImagen = lista[step].replace(/^.*\//, '');
-    nombreImagen = convertirAWebp(nombreImagen);
-    
-    const nuevaRuta = `${getRutaBase()}/imagenes/${nombreImagen}`;
-    img.src = nuevaRuta;
-    
-    img.onload = () => {
-      contenedor.removeChild(overlay);
-      
-      const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
-      const subtitulo = subtitulosPorCaja[index]?.[step] || "";
-      if (subtituloCaja) subtituloCaja.textContent = subtitulo;
-
-      retro.style.display = step > 0 ? "block" : "none";
-      avanzar.style.display = step >= lista.length - 1 ? "none" : "block";
-
-      img.classList.remove("slide-out-right");
-      img.classList.add("slide-in-left");
-      setTimeout(() => img.classList.remove("slide-in-left"), 400);
-
-      retro.disabled = false;
-      avanzar.disabled = false;
-
-      setTimeout(() => {
-        reproducirAudio(botonAudio);
-      }, 500);
-    };
-
-    img.onerror = () => {
-      console.error(`Error cargando imagen: ${nuevaRuta}`);
-      if (overlay && overlay.parentNode) {
-        contenedor.removeChild(overlay);
-      }
-      retro.disabled = false;
-      avanzar.disabled = false;
-      setTimeout(() => {
-        reproducirAudio(botonAudio);
-      }, 500);
-    };
+  // Actualizar botÃ³n de audio
+  const botonAudio = contenedor.querySelector('.btn-audio');
+  if (botonAudio) {
+    botonAudio.dataset.habitacion = habitacionActual;
+    botonAudio.dataset.seccion = seccionActual;
+    botonAudio.dataset.audio = `video${index + 1}${step > 0 ? `_sub${step}` : ''}`;
   }
+
+  // Crear overlay
+  const overlay = document.createElement("div");
+  overlay.className = "loader-overlay";
+  const spinner = document.createElement("div");
+  spinner.className = "loader-spinner";
+  overlay.appendChild(spinner);
+  contenedor.appendChild(overlay);
+
+  // Cambiar imagen
+  const img = contenedor.querySelector('img');
+  img.classList.add("slide-out-right");
+  
+  let nombreImagen = lista[step].replace(/^.*\//, '');
+  nombreImagen = convertirAWebp(nombreImagen);
+  
+  const nuevaRuta = `${getRutaBase()}/imagenes/${nombreImagen}`;
+
+  // FunciÃ³n de limpieza mejorada
+  const cleanup = () => {
+    if (overlay && overlay.parentNode) {
+      contenedor.removeChild(overlay);
+    }
+    retro.disabled = false;
+    avanzar.disabled = false;
+    
+    // Liberar cooldown despuÃ©s de 600ms
+    setTimeout(() => {
+      imageCooldown = false;
+    }, 1500);
+  };
+
+  // Cargar imagen
+  const tempImg = new Image();
+  tempImg.onload = () => {
+    img.src = tempImg.src;
+    cleanup();
+    
+    // Actualizar subtÃ­tulo
+    const subtituloCaja = contenedor.parentElement.querySelector('.subtitulo-caja');
+    const subtitulo = subtitulosPorCaja[index]?.[step] || "";
+    if (subtituloCaja) subtituloCaja.textContent = subtitulo;
+
+    // Animaciones
+    img.classList.remove("slide-out-right");
+    img.classList.add("slide-in-left");
+    setTimeout(() => img.classList.remove("slide-in-left"), 400);
+
+    // Actualizar botones
+    retro.style.display = step > 0 ? "block" : "none";
+    avanzar.style.display = step >= lista.length - 1 ? "none" : "block";
+
+    // REPRODUCIR AUDIO INMEDIATAMENTE
+    if (botonAudio && window.reproducirAudio) {
+      window.reproducirAudio(botonAudio);
+    }
+  };
+
+  tempImg.onerror = () => {
+    console.error(`Error cargando imagen: ${nuevaRuta}`);
+    cleanup();
+    
+    // REPRODUCIR AUDIO AUNQUE FALLE LA IMAGEN
+    if (botonAudio && window.reproducirAudio) {
+      setTimeout(() => window.reproducirAudio(botonAudio), 200);
+    }
+  };
+
+  tempImg.src = nuevaRuta;
 }
 
 /* AUDIO Y IMAGENES DE CAJA FINNNN   ==========*/
@@ -1302,7 +1378,7 @@ function parseJwt(token) {
   return JSON.parse(jsonPayload);
 }
 
-function registrarBoton(botonNombre) {
+/*function registrarBoton(botonNombre) {
   const fechaHora = new Date().toLocaleString();
 
   // Primero, buscar si ya existe ese botón
@@ -1351,7 +1427,7 @@ function registrarBoton(botonNombre) {
       }
     })
     .catch(err => console.error("Error al buscar botón:", err));
-}
+}*/
 /* BOTONES DEL MENU - PIE DE PAGINA ========================================================== */
 document.addEventListener("DOMContentLoaded", () => {
   const btnGuia = document.getElementById("btn-cambiar-guia");
@@ -1511,4 +1587,356 @@ function salirPantallaCompleta() {
   // Cambiar botones
   document.getElementById("btn-exit-fullscreen").classList.add("hidden");
   document.getElementById("btn-fullscreen").classList.remove("hidden");
+}// PARCHE ESPECÍFICO PARA HABITACIÓN 6 - Añadir al final de script.js
+
+// Modificar la función irAHabitacion para detectar habitación 6
+const irAHabitacionOriginal = window.irAHabitacion;
+window.irAHabitacion = async function(habitacionID, seccionID) {
+  // Si es habitación 6, detener video y mostrar avatar
+  if (habitacionID === 'habitacion_6') {
+    const video = document.getElementById("aiko-video");
+    const avatar = document.getElementById("avatar");
+    
+    if (video) {
+      video.pause();
+      video.classList.remove("playing");
+    }
+    
+    if (avatar) {
+      avatar.classList.remove("hidden");
+    }
+  }
+  
+  // Ejecutar función original
+  return await irAHabitacionOriginal.call(this, habitacionID, seccionID);
+};
+
+// Modificar reproducirAudio para habitación 6
+const reproducirAudioOriginal = window.reproducirAudio;
+window.reproducirAudio = async function(button) {
+  const currentRoom = button?.dataset?.habitacion || window.habitacionActual || 'habitacion_1';
+  
+  // Si estamos en habitación 6, solo cargar texto y mostrar avatar
+  if (currentRoom === 'habitacion_6') {
+    if (button?.disabled) return;
+    
+    button.disabled = true;
+    setTimeout(() => button.disabled = false, 800);
+    
+    if (typeof playClickSound === 'function') {
+      playClickSound();
+    }
+    
+    // Asegurar que el avatar esté visible y video pausado
+    const avatar = document.getElementById("avatar");
+    const video = document.getElementById("aiko-video");
+    const loader = document.getElementById("avatar-loader");
+    
+    if (video) {
+      video.pause();
+      video.classList.remove("playing");
+    }
+    
+    if (avatar) {
+      avatar.classList.remove("hidden");
+    }
+    
+    if (loader) {
+      loader.classList.add("hidden");
+    }
+    
+    // Solo cargar texto para habitación 6
+    await loadSubtitlesHabitacion6(currentRoom);
+    return;
+  }
+  
+  // Para otras habitaciones, usar función original
+  return await reproducirAudioOriginal.call(this, button);
+};
+
+// Función específica para cargar texto de habitación 6
+async function loadSubtitlesHabitacion6(roomId) {
+  try {
+    // Intentar cargar el único archivo de texto de habitación 6
+    const textoURL = `habitaciones/${roomId}/seccion_1/textos/video1.txt`;
+    
+    console.log(`Cargando texto de habitación 6: ${textoURL}`);
+    
+    const response = await fetch(textoURL);
+    let texto = "";
+    
+    if (response.ok) {
+      texto = await response.text();
+      console.log("✅ Texto cargado correctamente para habitación 6");
+    } else {
+      console.warn("⚠️ No se pudo cargar el archivo de texto");
+      texto = "Información no disponible para esta sección.";
+    }
+    
+    const dialogueBox = document.getElementById("dialogue-box");
+    if (dialogueBox && typeof escribirTextoGradualmente === 'function') {
+      escribirTextoGradualmente(texto, dialogueBox, 60);
+    }
+    
+  } catch (error) {
+    console.warn("❌ Error cargando texto para habitación 6:", error);
+    
+    const dialogueBox = document.getElementById("dialogue-box");
+    if (dialogueBox && typeof escribirTextoGradualmente === 'function') {
+      escribirTextoGradualmente("Error al cargar la información.", dialogueBox, 60);
+    }
+  }
+}
+
+// Modificar la función cambiarSeccion para habitación 6
+const cambiarSeccionOriginal = window.cambiarSeccion;
+window.cambiarSeccion = async function(seccionID) {
+  const currentRoom = window.habitacionActual;
+  
+  // Si estamos en habitación 6, configurar específicamente
+  if (currentRoom === 'habitacion_6') {
+    window.seccionActual = seccionID;
+    
+    // Detener video y mostrar avatar
+    const video = document.getElementById("aiko-video");
+    const avatar = document.getElementById("avatar");
+    
+    if (video) {
+      video.pause();
+      video.classList.remove("playing");
+    }
+    
+    if (avatar) {
+      avatar.classList.remove("hidden");
+    }
+    
+    // Auto-reproducir texto al cambiar sección en habitación 6
+    setTimeout(() => {
+      const botonAudio = document.querySelector('.imagen-caja .btn-audio');
+      if (botonAudio) {
+        window.reproducirAudio(botonAudio);
+      }
+    }, 500);
+    
+    return;
+  }
+  
+  // Para otras habitaciones, usar función original
+  return await cambiarSeccionOriginal.call(this, seccionID);
+};
+
+console.log("🏠 Parche para habitación 6 aplicado - Solo texto y avatar");
+// Variable global para controlar la reproducción actual
+let currentVideoRequest = null;
+let videoQueue = [];
+
+// Función mejorada de reproducción con control de secuencia
+async function reproducirAudioSecuencial(button) {
+    if (button.disabled) return;
+    
+    button.disabled = true;
+    setTimeout(() => button.disabled = false, 800);
+
+    if (typeof playClickSound === 'function') {
+        playClickSound();
+    }
+
+    const contenedor = button.closest('.imagen-caja');
+    if (!contenedor) return;
+
+    const index = parseInt(contenedor.dataset.index) || 0;
+    const step = parseInt(contenedor.dataset.step) || 0;
+    const audioName = `video${index + 1}${step > 0 ? `_sub${step}` : ''}.mp4`;
+
+    let currentRoom = button.dataset.habitacion || window.habitacionActual || 'habitacion_1';
+    let currentSection = button.dataset.seccion || window.seccionActual || 'seccion_1';
+
+    // Crear ID único para esta petición
+    const requestId = `${currentRoom}_${currentSection}_${audioName}_${Date.now()}`;
+    
+    console.log(`🎬 Nueva petición de video: ${requestId}`);
+
+    // CANCELAR petición anterior si existe
+    if (currentVideoRequest) {
+        console.log(`❌ Cancelando petición anterior: ${currentVideoRequest}`);
+        currentVideoRequest = null;
+    }
+
+    // Establecer como petición actual
+    currentVideoRequest = requestId;
+
+    const loader = document.getElementById("avatar-loader");
+    const avatar = document.getElementById("avatar");
+    const video = document.getElementById("aiko-video");
+
+    // UI: Mostrar loading
+    if (avatar) avatar.classList.add("hidden");
+    if (video) video.classList.remove("playing");
+    if (loader) loader.classList.remove("hidden");
+
+    try {
+        // Verificar si esta petición sigue siendo válida
+        if (currentVideoRequest !== requestId) {
+            console.log(`⏭️ Petición cancelada durante setup: ${requestId}`);
+            return;
+        }
+
+        // Para habitación 6, solo mostrar avatar y texto
+        if (currentRoom === 'habitacion_6') {
+            if (video) {
+                video.pause();
+                video.classList.remove("playing");
+            }
+            if (avatar) avatar.classList.remove("hidden");
+            if (loader) loader.classList.add("hidden");
+            
+            await loadSubtitles(currentRoom, currentSection, audioName);
+            return;
+        }
+
+        // Obtener video con verificación de cancelación
+        const blobURL = await getVideoWithCancellation(currentRoom, currentSection, audioName, requestId);
+
+        // Verificar si la petición sigue siendo válida después de la carga
+        if (currentVideoRequest !== requestId) {
+            console.log(`⏭️ Petición cancelada después de carga: ${requestId}`);
+            return;
+        }
+
+        if (blobURL && video) {
+            console.log(`✅ Reproduciendo video: ${audioName}`);
+            
+            // Configurar video solo si la petición sigue activa
+            if (video.src !== blobURL) {
+                video.src = blobURL;
+                video.load();
+            }
+            
+            video.currentTime = 0;
+
+            // Reproducir con verificación de cancelación
+            await playVideoWithCancellation(video, requestId);
+
+            // Configurar finalización solo si no fue cancelado
+            if (currentVideoRequest === requestId) {
+                video.onended = () => {
+                    video.classList.remove("playing");
+                    if (avatar) avatar.classList.remove("hidden");
+                    if (currentVideoRequest === requestId) {
+                        currentVideoRequest = null;
+                    }
+                };
+            }
+
+        } else {
+            throw new Error(`Video no disponible: ${audioName}`);
+        }
+
+    } catch (error) {
+        // Solo mostrar error si la petición no fue cancelada
+        if (currentVideoRequest === requestId) {
+            console.warn(`⚠️ Error reproduciendo ${audioName}:`, error);
+            showAvatarOnly();
+        }
+    }
+
+    // Cargar subtítulos solo si la petición sigue activa
+    if (currentVideoRequest === requestId) {
+        await loadSubtitles(currentRoom, currentSection, audioName);
+    }
+}
+
+// Función para obtener video con verificación de cancelación
+async function getVideoWithCancellation(roomId, sectionId, videoName, requestId) {
+    const checkCancellation = () => {
+        if (currentVideoRequest !== requestId) {
+            throw new Error('Petición cancelada');
+        }
+    };
+
+    checkCancellation();
+    
+    if (window.videoPreloader || window.enhancedPreloader) {
+        const preloader = window.enhancedPreloader || window.videoPreloader;
+        const blobURL = await preloader.getVideo(roomId, sectionId, videoName);
+        
+        checkCancellation();
+        return blobURL;
+    }
+
+    return null;
+}
+
+// Función para reproducir video con verificación de cancelación
+async function playVideoWithCancellation(video, requestId) {
+    return new Promise((resolve, reject) => {
+        let resolved = false;
+        
+        const checkAndResolve = (result) => {
+            if (resolved) return;
+            if (currentVideoRequest !== requestId) {
+                resolved = true;
+                reject(new Error('Petición cancelada'));
+                return;
+            }
+            resolved = true;
+            resolve(result);
+        };
+
+        const checkAndReject = (error) => {
+            if (resolved) return;
+            resolved = true;
+            reject(error);
+        };
+
+        const cleanup = () => {
+            video.removeEventListener('canplay', handleCanPlay);
+            video.removeEventListener('error', handleError);
+        };
+
+        const handleCanPlay = () => {
+            if (currentVideoRequest !== requestId) {
+                cleanup();
+                checkAndReject(new Error('Petición cancelada'));
+                return;
+            }
+
+            const loader = document.getElementById("avatar-loader");
+            if (loader) loader.classList.add("hidden");
+            video.classList.add("playing");
+            
+            video.play()
+                .then(() => checkAndResolve())
+                .catch(err => checkAndReject(err));
+        };
+
+        const handleError = (error) => {
+            cleanup();
+            checkAndReject(error);
+        };
+
+        video.addEventListener('canplay', handleCanPlay, { once: true });
+        video.addEventListener('error', handleError, { once: true });
+
+        // Timeout con verificación de cancelación
+        setTimeout(() => {
+            if (!resolved) {
+                cleanup();
+                checkAndReject(new Error('Video timeout'));
+            }
+        }, 2000);
+    });
+}
+
+function showAvatarOnly() {
+    const loader = document.getElementById("avatar-loader");
+    const avatar = document.getElementById("avatar");
+    const video = document.getElementById("aiko-video");
+    
+    if (loader) loader.classList.add("hidden");
+    if (avatar) avatar.classList.remove("hidden");
+    if (video) {
+        video.classList.remove("playing");
+        video.pause();
+    }
 }
