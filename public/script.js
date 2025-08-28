@@ -33,6 +33,12 @@ const HABITACION_6_CONFIG = {
 function convertirAWebp(nombreImagen) {
   return nombreImagen.replace(/\.(jpg|jpeg|png|gif)$/i, '.webp');
 }
+function inicializarAvatarPorDefecto() {
+    if (!window.avatarSeleccionado) {
+        window.avatarSeleccionado = 'Andrea_anime';
+        console.log('✅ Avatar inicializado por defecto:', window.avatarSeleccionado);
+    }
+}
 cargarSeccionMinima()
 const avatares = {
   Andrea: {
@@ -203,25 +209,37 @@ function inicializarSelectorAvatares() {
     `;
 
     div.onclick = () => {
-      avatarSeleccionado = id;    
+      // ASEGURAR QUE SE ASIGNE CORRECTAMENTE ANTES QUE NADA
+      window.avatarSeleccionado = id;
+      avatarSeleccionado = id; // También variable global sin window
       
-      // 🔥 USAR EL SISTEMA OPTIMIZADO - CORREGIDO
-      if (window.changeGuide) {
-        window.changeGuide(id);
-      }
-      
-      // Resto del código igual...
-      document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove("selected"));
-      div.classList.add("selected");    
+      console.log(`👤 Avatar cambiado a: ${id}`);
+      console.log('🔍 Verificación window.avatarSeleccionado:', window.avatarSeleccionado);    
 
-      const datos = avatares[avatarSeleccionado];
-      const video = div.querySelector(".video-bienvenida");
-      const imagen = div.querySelector("img");
-      const avatarImg = document.getElementById("avatar");
-      if (avatarImg) {
-        avatarImg.src = datos.imagen;
-        avatarImg.classList.remove("hidden");
+      // Verificar que existe
+      if (!avatares[avatarSeleccionado]) {
+          console.error(`❌ Avatar "${avatarSeleccionado}" no encontrado en avatares object`);
+          return;
+      }    
+
+      // USAR EL SISTEMA OPTIMIZADO DESPUÉS de asignar
+      if (window.changeGuide) {
+          window.changeGuide(id);
       }
+
+       // Resto del código de UI...
+       document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove("selected"));
+       div.classList.add("selected");    
+     
+       const datos = avatares[avatarSeleccionado]; // This should now work
+       const video = div.querySelector(".video-bienvenida");
+       const imagen = div.querySelector("img");
+       const avatarImg = document.getElementById("avatar");
+
+       if (avatarImg) {
+           avatarImg.src = datos.imagen;
+           avatarImg.classList.remove("hidden");
+       }
       
       // Detener cualquier otro video en reproducción
       document.querySelectorAll(".video-bienvenida").forEach(v => {
@@ -278,6 +296,7 @@ function getRutaBase() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  inicializarAvatarPorDefecto(); // ✅ NUEVA LÍNEA
   inicializarImagenes();
   inicializarSelectorAvatares();
 });
@@ -1321,6 +1340,11 @@ function mostrarImagenFinal(respuestasCorrectas) {
 function esperar(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+window.addEventListener("load", () => {
+    if (!window.avatarSeleccionado) {
+        inicializarAvatarPorDefecto();
+    }
+});
 window.onload = function () {
   google.accounts.id.initialize({
     client_id: "339878496574-apf0924ekjaf03ibf9f3713o5abs29o5.apps.googleusercontent.com",
@@ -2111,23 +2135,78 @@ class VideoDownloadController {
     // UTILIDADES
     generateKey(roomId, sectionId, videoName) {
         const guide = this.getCurrentGuide();
-        return `${roomId}/${sectionId}/${guide}/${videoName}`;
+        const key = `${roomId}/${sectionId}/${guide}/${videoName}`;
+        console.log(`🔑 Clave generada: ${key}`);
+        return key;
     }
 
-    getCurrentGuide() {
-        if (window.avatarSeleccionado && window.avatares) {
-            const guideMapping = {
-                'Andrea': 'andrea_irl',
-                'Andrea_anime': 'andrea',
-                'Carlos_IRL': 'carlos_irl', 
-                'Carlos': 'carlos',
-                'bryan': 'Bryan',
-                'maria': 'Maria'
-            };
-            return guideMapping[window.avatarSeleccionado] || 'andrea';
+// FUNCIÓN getCurrentGuide() CORREGIDA
+getCurrentGuide() {
+    console.log('🎭 Avatar seleccionado:', window.avatarSeleccionado);
+    
+    // Buscar avatarSeleccionado en diferentes ubicaciones
+    let selectedAvatar = window.avatarSeleccionado || 
+                        window.avatar?.seleccionado || 
+                        avatarSeleccionado;
+
+    // Si no se encuentra, buscar en el DOM
+    if (!selectedAvatar) {
+        const selectedElement = document.querySelector('.avatar-option.selected');
+        if (selectedElement) {
+            const avatarData = selectedElement.querySelector('.avatar-nombre')?.textContent;
+            if (avatarData) {
+                const nameToId = {
+                    'Andrea': 'Andrea',
+                    'Andrea anime': 'Andrea_anime',
+                    'Carlos': 'Carlos_IRL',
+                    'Carlos anime': 'Carlos',
+                    'Bryan': 'bryan',
+                    'Maria': 'maria'
+                };
+                selectedAvatar = nameToId[avatarData] || 'Andrea_anime';
+            }
         }
-        return 'andrea';
     }
+
+    console.log('🔍 Avatar detectado:', selectedAvatar);
+    
+    // 🔧 VERIFICACIÓN MEJORADA - Usar tanto window.avatares como la variable global
+    const avataresObj = window.avatares || avatares;
+    
+    if (selectedAvatar && avataresObj) {
+        console.log('📋 Avatares disponibles:', Object.keys(avataresObj));
+        console.log('🔍 Buscando avatar:', selectedAvatar);
+        console.log('✅ Existe?', !!avataresObj[selectedAvatar]);
+        
+        // 🔧 MAPEO DIRECTO SIN VERIFICAR EXISTENCIA EN AVATARES
+        const guideMapping = {
+            'Andrea': 'andrea_irl',        
+            'Andrea_anime': 'andrea',      
+            'Carlos_IRL': 'carlos_irl',    // ← Carlos real
+            'Carlos': 'carlos',            // ← Carlos anime
+            'bryan': 'Bryan',              
+            'maria': 'Maria'               
+        };
+        
+        const mappedGuide = guideMapping[selectedAvatar];
+        
+        if (mappedGuide) {
+            console.log(`📁 Carpeta de videos: ${mappedGuide}`);
+            return mappedGuide;
+        } else {
+            console.warn(`⚠️ No hay mapeo para "${selectedAvatar}", usando andrea por defecto`);
+            return 'andrea';
+        }
+        
+    } else {
+        console.warn('⚠️ No se encontró objeto avatares o selectedAvatar');
+        console.log('🔍 selectedAvatar:', selectedAvatar);
+        console.log('🔍 avataresObj:', !!avataresObj);
+    }
+    
+    console.warn('⚠️ Usando andrea por defecto');
+    return 'andrea';
+}
 
     // LIMPIAR CACHE
     clearCache() {
