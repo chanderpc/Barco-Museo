@@ -1633,7 +1633,7 @@ body.modo-claro #dialogue-box {
   background-color: #eaeaea;   /* gris claro */
   color: #000000;              /* texto negro */
 }
-btn-fullscreen
+
 /* 🖼️ Título y subtítulo en las cajas */
 body.modo-claro .titulo-caja,
 body.modo-claro .subtitulo-caja {
