@@ -2445,5 +2445,35 @@ window.clearVideoCache = function() {
     optimizedPreloader.downloadController.clearCache();
     console.log('🧹 Cache limpiado');
 };
+// Agregar este código al final de script.js o al inicio del DOMContentLoaded
+
+// Detectar iOS y ocultar botones de pantalla completa
+function ocultarPantallaCompletaEnIOS() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  
+  if (isIOS) {
+    // Ocultar botón de pantalla completa
+    const btnFullscreen = document.getElementById("btn-fullscreen");
+    const btnExitFullscreen = document.getElementById("btn-exit-fullscreen");
+    
+    if (btnFullscreen) {
+      btnFullscreen.style.display = "none";
+    }
+    
+    if (btnExitFullscreen) {
+      btnExitFullscreen.style.display = "none";
+    }
+    
+    console.log("Botones de pantalla completa ocultados en iOS");
+  }
+}
+
+// Ejecutar cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", () => {
+  ocultarPantallaCompletaEnIOS();
+});
+
+// También ejecutar inmediatamente por si el DOM ya está cargado
+ocultarPantallaCompletaEnIOS();
 
 console.log('⚡ Controlador de descargas únicas inicializado - Sin duplicados');
