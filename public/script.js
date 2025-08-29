@@ -2415,7 +2415,7 @@ async function loadSubtitles(roomId, sectionId, audioName) {
         
         const dialogueBox = document.getElementById("dialogue-box");
         if (dialogueBox && typeof escribirTextoGradualmente === 'function') {
-            escribirTextoGradualmente(texto || "Información no disponible", dialogueBox, 60);
+            escribirTextoGradualmente(texto || "Información no disponible", dialogueBox, 50);
         }
     } catch (error) {
         console.warn(`No se pudo cargar texto para: ${audioName}`);
@@ -2517,3 +2517,4 @@ function detenerVideoCompletamente() {
   console.log("Video detenido completamente");
 }
 console.log('⚡ Controlador de descargas únicas inicializado - Sin duplicados');
+
